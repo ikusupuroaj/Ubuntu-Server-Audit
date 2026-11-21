@@ -1,0 +1,14 @@
+# 官方資料（用 update-data.py 下載，不放進版本控管）
+/data/
+# 收集檔與報告（可能含受檢單位資料）
+hc-*.tar.gz
+hc-report*/
+/demo-report/
+/runs/
+/check/
+__pycache__/
+*.pyc
+.DS_Store
+/reports/
+/test-results/
+hosts.txt

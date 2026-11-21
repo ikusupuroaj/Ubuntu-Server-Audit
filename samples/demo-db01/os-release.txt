@@ -1,0 +1,6 @@
+NAME="Ubuntu"
+VERSION="16.04.7 LTS (Xenial Xerus)"
+VERSION_ID="16.04"
+PRETTY_NAME="Ubuntu 16.04.7 LTS"
+
+__EXIT__=0

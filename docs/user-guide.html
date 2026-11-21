@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ubuntu 主機資安健檢工具 使用者手冊</title>
+<style>
+:root{--fg:#1d1d1f;--mut:#5f6368;--line:#dfe1e5;--card:#f5f6f8;--acc:#b33a1f;--ok:#2e7d32;--warn:#fff4e5;--warnb:#ef6c00;--code:#f2f3f5}
+*{box-sizing:border-box}
+html{background:#fff}
+body{margin:0;color:var(--fg);background:#fff;font:15px/1.75 "PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+main{max-width:860px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:26px;margin:0 0 6px;line-height:1.35}
+h2{font-size:22px;margin:48px 0 14px;padding-bottom:6px;border-bottom:2px solid var(--fg)}
+h3{font-size:17px;margin:28px 0 10px}
+p,li{margin:6px 0}
+a{color:var(--acc)}
+code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;margin:8px 0 14px}
+pre.out{background:#1f2328;color:#e6edf3}
+table{border-collapse:collapse;width:100%;margin:10px 0 18px;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--card);font-weight:600}
+.tw{overflow-x:auto}
+.note{background:var(--card);border-left:4px solid var(--mut);padding:10px 14px;border-radius:6px;margin:12px 0}
+.warn{background:var(--warn);border-left:4px solid var(--warnb);padding:10px 14px;border-radius:6px;margin:12px 0}
+.step{display:flex;gap:12px;margin:14px 0}
+.step b.n{flex:0 0 28px;height:28px;border-radius:50%;background:var(--fg);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px}
+.step>div{flex:1;min-width:0}
+.cover{min-height:85vh;display:flex;flex-direction:column;justify-content:center}
+.cover h1{font-size:34px}
+.cover .sub{font-size:18px;color:var(--mut)}
+.toc ol{padding-left:22px}
+.mut{color:var(--mut)}
+img{max-width:100%;border:1px solid var(--line);border-radius:6px;margin:8px 0 14px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.flow span{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+.tag{display:inline-block;border-radius:4px;padding:0 6px;font-size:12px;font-weight:700;color:#fff}
+figure.arch{margin:14px 0 18px}
+figure.arch svg{display:block;width:100%;height:auto}
+figure.arch figcaption{font-weight:600;margin:6px 0 4px}
+figure.arch ol.legend{list-style:none;padding-left:0;margin:4px 0}
+figure.arch ol.legend li{padding-left:1.6em;text-indent:-1.6em}
+.arch .z{fill:none;stroke:#9aa0a6;stroke-width:1.5;stroke-dasharray:6 4}
+.arch .zw{fill:#fff8ef;stroke:var(--warnb);stroke-width:1.5;stroke-dasharray:6 4}
+.arch .bx{fill:var(--card);stroke:var(--fg);stroke-width:1.2}
+.arch .wb{fill:#fff;stroke:var(--fg);stroke-width:1}
+.arch .hl{fill:#fff;stroke:var(--acc);stroke-width:1.5}
+.arch .ln{fill:none;stroke:var(--fg);stroke-width:1.6}
+.arch .lr{fill:none;stroke:var(--acc);stroke-width:1.6}
+.arch text{font-size:13px;fill:var(--fg)}
+.arch .t{font-size:14px;font-weight:700}
+.arch .s{font-size:12px;fill:var(--mut)}
+.arch .c{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12px}
+.arch .zl{font-size:12.5px;font-weight:700;fill:var(--mut)}
+.arch .bd{fill:var(--acc)}
+.arch .bn{font-size:12px;font-weight:700;fill:#fff}
+.tA{background:#c62828}.tB{background:#ef6c00}.tC{background:#1565c0}.tD{background:#546e7a}
+@media print{
+  main{max-width:none;padding:0}
+  h2{break-before:page}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+  h2+*,h3+*,h3+p+*{break-before:avoid;page-break-before:avoid}
+  p{orphans:3;widows:3}
+  pre,table,img,.step,.note,.warn,.tw{break-inside:avoid;page-break-inside:avoid}
+  .keep{break-inside:avoid;page-break-inside:avoid}
+  .cover{min-height:240mm}
+  a{color:var(--fg);text-decoration:none}
+}
+</style>
+</head>
+<body>
+<main>
+
+<section class="cover">
+  <h1>Ubuntu 主機資安健檢工具<br>使用者手冊</h1>
+  <p class="sub">offline-ubuntu-healthcheck 0.7.0</p>
+  <p class="mut">2026 年 11 月</p>
+  <p class="mut">工具下載：https://github.com/ikusupuroaj/Ubuntu-Server-Audit</p>
+  <p class="mut" style="margin-top:40px">本工具不是 Canonical 的官方工具，與 Canonical 沒有隸屬關係，也沒有經過 Canonical 背書。Ubuntu 是 Canonical Ltd. 的商標。</p>
+</section>
+
+<section class="toc">
+  <h2>目錄</h2>
+  <ol>
+    <li>這個工具做什麼</li>
+    <li>準備分析用的電腦</li>
+    <li>準備主機清單與 SSH 登入</li>
+    <li>收集資料並產生報告</li>
+    <li>看懂報告</li>
+    <li>交給顧問分析</li>
+    <li>更新官方資料與常見問題</li>
+    <li>附錄：指令速查</li>
+  </ol>
+  <p>第一次用，建議照第 2 章到第 5 章的順序做一遍。之後只要翻第 4 章與附錄的指令。</p>
+</section>
+
+<h2>1. 這個工具做什麼</h2>
+
+<p>這個工具檢查 Ubuntu 主機，回答三個問題：</p>
+<ol>
+  <li>主機的版本還有沒有官方維護。</li>
+  <li>缺了哪些安全修補。</li>
+  <li>哪些缺口訂閱 Ubuntu Pro 就能補上，哪些跟 Ubuntu Pro 無關、要自己處理。</li>
+</ol>
+<p>比對用的是 Canonical 官方公開的 OVAL 弱點資料。受檢主機上不必安裝任何東西，也不需要連網。</p>
+
+<h3>整個流程</h3>
+<div class="flow"><span>① 準備分析電腦</span>→<span>② 準備主機清單</span>→<span>③ 收集並產生報告</span>→<span>④ 看報告</span>→<span>⑤（選用）交給顧問分析</span></div>
+<p>各步驟在哪台電腦上做、資料怎麼流動，請看第 2 章的圖 1（下載與更新）和第 4 章的圖 2（掃描主機）。</p>
+
+<h3>會做與不會做的事</h3>
+<div class="tw"><table>
+<tr><th>會做</th><th>不會做</th></tr>
+<tr><td>讀取作業系統版本、已安裝套件、核心、開機時間、Ubuntu Pro 狀態、SSH 三項設定、防火牆狀態等系統資訊</td><td>不安裝套件、不改設定、不重啟服務、不執行 <code>apt update</code>、不做弱點利用或滲透測試</td></tr>
+<tr><td>在你的電腦上比對官方弱點資料，產生報告</td><td>不收集主機名稱、IP、密碼、金鑰、使用者家目錄、防火牆規則、Pro 的帳號與合約資訊</td></tr>
+</table></div>
+
+<h2>2. 準備分析用的電腦</h2>
+
+<p>「分析用的電腦」是你拿來執行工具、產生報告的那台。它要能用 SSH 連到受檢主機；連不到也沒關係，可以改請主機管理者自己收集（第 4 章情況三）。只檢查分析電腦自己的話，也不需要 SSH（第 4 章情況一）。</p>
+
+<h3>2.1 需要什麼</h3>
+<ul>
+  <li>Ubuntu 或 macOS。Windows 目前沒有實測。</li>
+  <li>Python 3.6 以上（Ubuntu 與 macOS 通常已內建），不必另外安裝套件。</li>
+  <li><code>git</code>（建議）與 <code>ssh</code>。</li>
+</ul>
+
+<h3>2.2 下載工具</h3>
+
+<p>從下載、更新到帶進封閉環境，整個過程如圖 1。2.2 與 2.3 節會逐步說明。</p>
+
+<figure class="arch keep">
+<svg viewBox="0 0 680 425" role="img" aria-label="圖 1：下載、更新工具並帶進封閉環境">
+<defs><marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d1d1f"/></marker></defs>
+<!-- 網際網路 -->
+<rect class="z" x="10" y="10" width="660" height="100" rx="10"/>
+<text class="zl" x="22" y="30">網際網路</text>
+<rect class="bx" x="30" y="40" width="280" height="56" rx="8"/>
+<text class="t" x="170" y="63" text-anchor="middle">GitHub（本專案）</text>
+<text class="s" x="170" y="84" text-anchor="middle">工具程式＋每天更新的官方資料副本</text>
+<rect class="bx" x="370" y="40" width="280" height="56" rx="8"/>
+<text class="t" x="510" y="63" text-anchor="middle">Canonical 官方網站</text>
+<text class="s" x="510" y="84" text-anchor="middle">OVAL 弱點資料（原始來源）</text>
+<!-- 能上網的地方 -->
+<rect class="z" x="10" y="165" width="300" height="250" rx="10"/>
+<text class="zl" x="22" y="402">能上網的地方（例如辦公室）</text>
+<rect class="bx" x="30" y="200" width="260" height="105" rx="8"/>
+<text class="t" x="160" y="223" text-anchor="middle">你的分析電腦</text>
+<text class="c" x="160" y="244" text-anchor="middle">Ubuntu-Server-Audit/</text>
+<text class="s" x="160" y="263" text-anchor="middle">工具＋data/（官方資料）</text>
+<circle class="bd" cx="52" cy="286" r="10"/><text class="bn" x="52" y="290" text-anchor="middle">3</text>
+<text class="c" x="68" y="290">./hc update --list</text><text class="s" x="206" y="290">看日期</text>
+<!-- 封閉環境 -->
+<rect class="zw" x="410" y="165" width="260" height="250" rx="10"/>
+<text class="zl" x="422" y="185">封閉環境（客戶現場）</text>
+<rect class="bx" x="430" y="200" width="220" height="90" rx="8"/>
+<text class="t" x="540" y="223" text-anchor="middle">封閉環境裡的電腦</text>
+<text class="c" x="540" y="248" text-anchor="middle">./hc update --verify</text>
+<text class="s" x="540" y="270" text-anchor="middle">每一行都是「一致」才正常</text>
+<text class="s" x="425" y="385">不用隨身碟：分析電腦整台帶進場</text>
+<text class="s" x="425" y="402">也可以，進場後一樣做第 5 步</text>
+<!-- 隨身碟 -->
+<rect class="wb" x="320" y="320" width="80" height="50" rx="8"/>
+<text class="t" x="360" y="343" text-anchor="middle">隨身碟</text>
+<text class="s" x="360" y="361" text-anchor="middle">（選用）</text>
+<!-- ① 下載 -->
+<path class="ln" d="M120 96V197" marker-end="url(#ah1)"/>
+<circle class="bd" cx="138" cy="132" r="10"/><text class="bn" x="138" y="136" text-anchor="middle">1</text>
+<text class="c" x="154" y="136">git clone</text>
+<text class="s" x="154" y="154">下載工具，含一份資料</text>
+<!-- ② 更新 -->
+<path class="ln" d="M480 96L278 197" marker-end="url(#ah1)"/>
+<circle class="bd" cx="420" cy="130" r="10"/><text class="bn" x="420" y="134" text-anchor="middle">2</text>
+<text class="c" x="436" y="134">./hc update</text><text class="s" x="522" y="134">向官方更新</text>
+<text class="s" x="436" y="152">連不到官方時，改從 GitHub 用 git pull</text>
+<!-- ④ 複製 -->
+<path class="ln" d="M160 305V345H317" marker-end="url(#ah1)"/>
+<circle class="bd" cx="182" cy="329" r="10"/><text class="bn" x="182" y="333" text-anchor="middle">4</text>
+<text class="s" x="198" y="333">複製整個資料夾</text>
+<!-- ⑤ 帶進場 -->
+<path class="ln" d="M400 345H540V293" marker-end="url(#ah1)"/>
+<circle class="bd" cx="434" cy="329" r="10"/><text class="bn" x="434" y="333" text-anchor="middle">5</text>
+<text class="s" x="450" y="333">帶進場後核對</text>
+</svg>
+<figcaption>圖 1　下載、更新，帶進封閉環境</figcaption>
+<ol class="legend">
+  <li>① 用 <code>git clone</code> 下載工具，同時會帶回一份官方資料（本節步驟 1）。</li>
+  <li>② 執行 <code>./hc update</code>，向 Canonical 官方網站取得最新資料。連不到官方網站、但能連 GitHub 時，改用 <code>git pull</code>（2.3 節）。</li>
+  <li>③ 執行 <code>./hc update --list</code>，確認資料日期在 7 天內。</li>
+  <li>④（選用）把整個 <code>Ubuntu-Server-Audit</code> 資料夾複製到隨身碟。</li>
+  <li>⑤ 在封閉環境的電腦上執行 <code>./hc update --verify</code>，確認檔案沒被改過或損毀。</li>
+</ol>
+</figure>
+
+<div class="step"><b class="n">1</b><div>
+<p>在能上網的電腦上下載：</p>
+<pre>git clone https://github.com/ikusupuroaj/Ubuntu-Server-Audit.git
+cd Ubuntu-Server-Audit</pre>
+<p>這樣下載會一起帶回一份 GitHub 上每天更新的官方弱點資料。第一次執行工具時，它會自動放進 <code>data/</code> 資料夾，不需要再連網。</p>
+</div></div>
+
+<div class="step"><b class="n">2</b><div>
+<p>確認資料已經就位，並看看是哪一天的：</p>
+<pre>./hc update --list</pre>
+<p>每個版本會列出一行，「官方產生」是 Canonical 產生這份資料的時間。</p>
+</div></div>
+
+<div class="warn"><b>不要用這兩種方式下載</b>：GitHub 網頁上的「Download ZIP」，以及 <code>git clone --depth 1</code>。這兩種拿不到官方資料。沒有 <code>git</code> 的電腦，請到專案的 Releases 頁面下載 <code>Ubuntu-Server-Audit-full.zip</code>，解壓縮後就有工具和最新的官方資料。</div>
+
+<h3>2.3 要帶進封閉環境之前</h3>
+<p>到客戶現場或封閉網路做健檢，進場前在能上網的地方做這三件事：</p>
+<div class="step"><b class="n">1</b><div><p>更新到最新資料。能連到 Canonical 官方網站時：</p><pre>./hc update</pre><p>連不到官方網站、但能連 GitHub 時，改用：</p><pre>git pull</pre></div></div>
+<div class="step"><b class="n">2</b><div><p>確認日期在 7 天內：</p><pre>./hc update --list</pre></div></div>
+<div class="step"><b class="n">3</b><div><p>整個 <code>Ubuntu-Server-Audit</code> 資料夾帶進去後，先核對檔案沒被改過或損毀：</p><pre>./hc update --verify</pre><p>每一行都是「一致」才算正常。</p></div></div>
+
+<div class="note">資料超過 7 天也能分析，只是之後才公布的弱點不會列入。工具在開始收集前會提醒你。</div>
+
+<h3>2.4（選用）安裝 OpenSCAP</h3>
+<p>工具內建比對功能，不裝也能用。分析電腦是 Ubuntu 的話，可以加裝 Canonical 文件示範的比對工具 OpenSCAP，裝了之後會自動改用它：</p>
+<pre>sudo apt install -y openscap-scanner    # 24.04 以後
+sudo apt install -y libopenscap8        # 22.04 以前</pre>
+
+<h2>3. 準備主機清單與 SSH 登入</h2>
+<p>這一章只有「分析電腦可以用 SSH 連到受檢主機」時才需要。只檢查分析電腦自己，或不能用 SSH 的話，直接跳到第 4 章的情況一或情況三。</p>
+
+<h3>3.1 建立主機清單 hosts.txt</h3>
+<div class="step"><b class="n">1</b><div><p>從範本複製一份：</p><pre>cp hosts.example.txt hosts.txt</pre></div></div>
+<div class="step"><b class="n">2</b><div>
+<p>用文字編輯器打開 <code>hosts.txt</code>，每行寫一台主機：「代號、空白、帳號@IP」。</p>
+<pre>H01   admin@10.0.0.5
+H02   ops@10.0.0.6     -p 2222</pre>
+<ul>
+  <li><b>代號</b>：報告上顯示的名字，只能用英文字母、數字與 <code>. _ -</code>，每台要不同。</li>
+  <li><b>帳號@IP</b>：建議寫 IP。寫主機名稱的話，要這台電腦查得到那個名稱才行。</li>
+  <li>SSH 不是 22 埠時，在後面加 <code>-p 埠號</code>。</li>
+</ul>
+</div></div>
+<div class="note">報告上只會出現代號，不會出現 IP。<code>hosts.txt</code> 記著代號與 IP 的對照，請留在受檢單位，不要隨報告交出去。</div>
+
+<h3>3.2 設定免密碼登入（SSH 金鑰）</h3>
+<p>工具會逐台自動登入，所以要先讓分析電腦不用輸入密碼就能登入每台主機。</p>
+<div class="step"><b class="n">1</b><div><p>看看分析電腦有沒有金鑰：</p><pre>ls ~/.ssh/id_*.pub</pre><p>出現 <code>No such file</code> 代表沒有，用下面的指令建立一把，問題都直接按 Enter：</p><pre>ssh-keygen -t ed25519</pre></div></div>
+<div class="step"><b class="n">2</b><div><p>把公鑰放到每台主機上，這一步會問一次那台主機的密碼：</p><pre>ssh-copy-id admin@10.0.0.5</pre></div></div>
+<div class="step"><b class="n">3</b><div><p>確認可以免密碼登入，看到 <code>OK</code> 就成功了：</p><pre>ssh admin@10.0.0.5 'echo OK'</pre><p>第一次連線會問要不要信任這台主機，確認 IP 沒錯後回答 <code>yes</code>。</p></div></div>
+
+<h3>3.3 要不要用 sudo</h3>
+<p>預設用一般權限就能檢查版本、套件、核心與 Ubuntu Pro 狀態。加上 <code>--sudo</code> 會多檢查三項：SSH 設定、防火牆、空密碼帳號。</p>
+<p><code>./hc scan --sudo</code> 需要主機上的帳號可以「免密碼 sudo」。不行的話，工具會自動改用一般權限，那三項在報告上列為「未能檢查」，不會被當成沒問題。</p>
+
+<h2>4. 收集資料並產生報告</h2>
+<p>依你的情況選一種。三種做法產生的報告完全一樣。</p>
+
+<h3>情況一：只想檢查分析電腦自己</h3>
+<p>要檢查的 Ubuntu 主機就是你正在用的這台。收集和分析都在這台完成，不需要 SSH，也不需要第 3 章的主機清單。</p>
+<pre>./hc local --sudo</pre>
+<p><code>--sudo</code> 會詢問你這個帳號的 sudo 密碼。不加也能跑，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p>
+<p>只有分析電腦本身是 Ubuntu 時才能用。macOS 沒有 Ubuntu 的套件清單，可以用來掃別台主機，但不能掃自己。</p>
+
+<h3>情況二：分析電腦能用 SSH 連到主機（多台主機時建議）</h3>
+<div class="step"><b class="n">1</b><div><p>在 <code>Ubuntu-Server-Audit</code> 資料夾裡執行：</p><pre>./hc scan hosts.txt --sudo</pre><p>不需要 sudo 就把 <code>--sudo</code> 拿掉。</p></div></div>
+<div class="step"><b class="n">2</b><div><p>等它跑完。每台主機通常 3 到 15 秒。畫面會像這樣（實測輸出）：</p>
+<pre class="out">開始收集 1 台主機（收集檔存放在 reports/2026-11-16-151406/collected，內含套件清單，請妥善保管）
+  [1/1] H01：完成，3 秒
+
+健檢完成：1 台主機，其中 1 台已過標準維護期
+------------------------------------------------------------
+  H01   20.04   需 Pro（ESM）   A 2｜B 0｜C 1｜D 2｜需 Pro 178、免費可修 3 則安全公告
+------------------------------------------------------------
+A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決）　C＝合規工具　D＝與 Pro 無關
+官方資料：focal（20.04），產生於 2026-11-15（1 天前），雜湊核對：一致
+
+報告：reports/2026-11-16-151406/report-20261116-151406.html　← 用瀏覽器打開</pre>
+<p>這段畫面的意思：H01 是 20.04，標準維護期已經過了；有 178 則安全公告的修補要訂閱 Ubuntu Pro 才拿得到，另外 3 則是免費的、只是還沒裝。A、B、C、D 是發現事項的類別，第 5 章會詳細說明。</p>
+</div></div>
+<div class="step"><b class="n">3</b><div><p>用瀏覽器打開最後一行的報告檔（<code>report-日期時間.html</code>）。</p></div></div>
+
+<figure class="arch">
+<div class="keep">
+<p>一次掃描多台主機時，資料怎麼流動如圖 2。</p>
+<svg viewBox="0 0 680 450" role="img" aria-label="圖 2：用 SSH 掃描多台主機">
+<defs>
+<marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d1d1f"/></marker>
+<marker id="ah2r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#b33a1f"/></marker>
+</defs>
+<!-- 分析電腦 -->
+<rect class="z" x="10" y="10" width="280" height="430" rx="10"/>
+<text class="zl" x="22" y="30">你的分析電腦（掃描時不必上網）</text>
+<rect class="hl" x="28" y="44" width="244" height="40" rx="8"/>
+<circle class="bd" cx="46" cy="64" r="10"/><text class="bn" x="46" y="68" text-anchor="middle">2</text>
+<text class="c" x="62" y="68">./hc scan hosts.txt --sudo</text>
+<rect class="bx" x="28" y="100" width="244" height="252" rx="8"/>
+<text class="c" x="40" y="120">Ubuntu-Server-Audit/</text>
+<rect class="wb" x="40" y="130" width="220" height="40" rx="6"/>
+<circle class="bd" cx="56" cy="150" r="10"/><text class="bn" x="56" y="154" text-anchor="middle">1</text>
+<text class="c" x="72" y="146">hosts.txt</text>
+<text class="s" x="72" y="163">主機清單：代號 帳號@IP</text>
+<rect class="wb" x="40" y="178" width="220" height="40" rx="6"/>
+<text class="c" x="72" y="194">collect.sh</text>
+<text class="s" x="72" y="211">收集腳本</text>
+<rect class="wb" x="40" y="226" width="220" height="40" rx="6"/>
+<text class="c" x="72" y="242">data/</text>
+<text class="s" x="72" y="259">官方弱點資料</text>
+<path class="ln" d="M150 266V287" marker-end="url(#ah2)"/>
+<circle class="bd" cx="172" cy="276" r="10"/><text class="bn" x="172" y="280" text-anchor="middle">5</text>
+<text class="s" x="188" y="281">在本機比對</text>
+<rect class="wb" x="40" y="290" width="220" height="54" rx="6"/>
+<circle class="bd" cx="56" cy="317" r="10"/><text class="bn" x="56" y="321" text-anchor="middle">6</text>
+<text class="c" x="72" y="306">reports/日期時間/</text>
+<text class="s" x="72" y="322">report-….html、findings-ai-….json</text>
+<text class="s" x="72" y="337">collected/（收集到的資料）</text>
+<path class="ln" d="M150 344V375" marker-end="url(#ah2)"/>
+<rect class="hl" x="28" y="378" width="244" height="44" rx="8"/>
+<circle class="bd" cx="46" cy="400" r="10"/><text class="bn" x="46" y="404" text-anchor="middle">7</text>
+<text x="62" y="405">用瀏覽器打開報告檔</text>
+<!-- 受檢主機 -->
+<rect class="z" x="420" y="10" width="250" height="430" rx="10"/>
+<text class="zl" x="432" y="30">受檢主機（單位內部網路）</text>
+<rect class="bx" x="450" y="56" width="205" height="56" rx="8"/>
+<text class="t" x="552" y="79" text-anchor="middle">H01　Ubuntu 20.04</text>
+<text class="c" x="552" y="100" text-anchor="middle">admin@10.0.0.5</text>
+<rect class="bx" x="450" y="128" width="205" height="56" rx="8"/>
+<text class="t" x="552" y="151" text-anchor="middle">H02　Ubuntu 22.04</text>
+<text class="c" x="552" y="172" text-anchor="middle">ops@10.0.0.6</text>
+<rect class="bx" x="450" y="200" width="205" height="56" rx="8"/>
+<text class="t" x="552" y="223" text-anchor="middle">H03　Ubuntu 24.04</text>
+<text class="c" x="552" y="244" text-anchor="middle">admin@10.0.0.7</text>
+<text class="s" x="552" y="290" text-anchor="middle">⋯ 其他主機</text>
+<path class="ln" d="M444 60H434V318H444"/>
+<text class="s" x="545" y="372" text-anchor="middle">主機上不安裝任何東西</text>
+<text class="s" x="545" y="390" text-anchor="middle">也不必連網際網路</text>
+<!-- ③ 送進 -->
+<path class="lr" d="M260 198H430" marker-end="url(#ah2r)"/>
+<circle class="bd" cx="308" cy="166" r="10"/><text class="bn" x="308" y="170" text-anchor="middle">3</text>
+<text class="s" x="324" y="171">經 SSH 逐台</text>
+<text class="s" x="300" y="189">送進 collect.sh 執行</text>
+<!-- ④ 傳回 -->
+<path class="lr" d="M432 314H262" marker-end="url(#ah2r)"/>
+<circle class="bd" cx="308" cy="290" r="10"/><text class="bn" x="308" y="294" text-anchor="middle">4</text>
+<text class="s" x="324" y="295">結果傳回</text>
+<text class="s" x="300" y="334">主機上不留檔</text>
+</svg>
+<figcaption>圖 2　用 SSH 一次掃描多台主機</figcaption>
+</div>
+<ol class="legend">
+  <li>① 把要檢查的主機寫進 <code>hosts.txt</code>（3.1 節），並設好免密碼登入（3.2 節）。</li>
+  <li>② 在分析電腦上執行 <code>./hc scan hosts.txt --sudo</code>。</li>
+  <li>③ 工具經 SSH 逐台登入，把 <code>collect.sh</code> 送進主機執行。不安裝套件、不改設定（主機上會留下哪些紀錄見 4.3 節）。</li>
+  <li>④ 收集結果傳回分析電腦，主機上不會留下腳本或收集檔。</li>
+  <li>⑤ 在分析電腦上和 <code>data/</code> 裡的官方資料比對，不必上網。</li>
+  <li>⑥ 報告與相關檔案存進 <code>reports/日期時間/</code>（4.2 節）。</li>
+  <li>⑦ 用瀏覽器打開 <code>report-日期時間.html</code>，第 5 章說明怎麼看。</li>
+</ol>
+</figure>
+
+<p>收集時，腳本經 SSH 送進主機執行，結果直接傳回分析電腦。主機上不會留下收集腳本或收集檔。</p>
+
+<h3>情況三：只能請主機管理者自己收集</h3>
+<div class="step"><b class="n">1</b><div><p>把 <code>collect.sh</code> 這個檔案交給主機管理者（隨身碟、內部檔案分享都可以）。</p></div></div>
+<div class="step"><b class="n">2</b><div><p>請管理者在主機上執行，<code>H01</code> 換成這台的代號：</p><pre>bash collect.sh --tag H01</pre><p>要多檢查 SSH、防火牆、空密碼帳號時改用：</p><pre>sudo bash collect.sh --tag H01</pre><p>完成後，目前的資料夾會多一個 <code>hc-H01-日期時間.tar.gz</code>。</p><p>用 sudo 產生的檔案屬於 root，只有 root 能讀。複製出來之前，先把檔案的擁有者改成自己：</p><pre>sudo chown $USER hc-H01-*.tar.gz</pre></div></div>
+<div class="step"><b class="n">3</b><div><p>管理者把這個檔案交回給你。你在分析電腦上執行：</p><pre>./hc report hc-H01-*.tar.gz</pre><p>多台一起分析，就把檔案都列上去，或用 <code>./hc report hc-*.tar.gz</code>。</p></div></div>
+
+<h3>4.1 報告表頭與去識別化</h3>
+<p>這些參數三種情況都能加：</p>
+<div class="tw"><table>
+<tr><th>參數</th><th>作用</th></tr>
+<tr><td><code>--agency "受檢單位名稱"</code></td><td>寫在報告表頭</td></tr>
+<tr><td><code>--assessor "執行單位名稱"</code></td><td>寫在報告表頭</td></tr>
+<tr><td><code>--deidentify</code></td><td>整份報告都去識別化：主機代號改成 H01、H02…，受檢單位遮掉。只要交給顧問分析的話不必加，<code>findings-ai-日期時間.json</code> 每次都是去識別化的版本（第 6 章）。加了之後，報告資料夾名稱結尾多 <code>-deid</code>，收集檔改放在資料夾外面的 <code>…-deid-collected/</code>，報告裡也不會有「交件代號」欄</td></tr>
+<tr><td><code>--refresh-data</code></td><td>開始收集前，先向 Canonical 檢查有沒有新的官方資料，有就下載（每次連線最多等 15 秒）。連不上就用已下載的資料，不會中斷</td></tr>
+</table></div>
+<p>開始收集前，畫面會先說明這次用的官方資料是哪一天產生的、從哪裡來，例如：</p>
+<pre>本次使用的官方弱點資料（data）：
+  noble（24.04）：官方產生於 2026-11-18（1 天前），剛從 Canonical 更新</pre>
+<p>沒加 <code>--refresh-data</code> 時寫「使用已下載的資料」；加了但連不上時寫「無法連線，改用已下載的資料」。</p>
+
+<h3>4.2 產出哪些檔案</h3>
+<p>每次分析都會在 <code>reports/日期時間/</code> 產生下面這些檔案。檔名裡的日期時間是分析當下的時間（YYYYMMDD-HHMMSS），和資料夾名稱一致，方便分辨是哪一次的結果：</p>
+<div class="tw"><table>
+<tr><th>檔案</th><th>用途</th></tr>
+<tr><td><code>report-日期時間.html</code></td><td>報告，用瀏覽器打開，自己看或交付</td></tr>
+<tr><td><code>findings-ai-日期時間.json</code></td><td>去識別化的結構化結果，<b>交給顧問分析時只要這個檔</b>（第 6 章）。主機代號改成 H01、H02…，收集時間只留日期，不含受檢單位名稱</td></tr>
+<tr><td><code>oval-detail.json</code></td><td>每則安全公告的完整比對明細，自己留存即可，不必交給顧問</td></tr>
+<tr><td><code>collected/</code></td><td>收集到的原始資料，含套件清單，請依單位的資料分級規定保管</td></tr>
+</table></div>
+
+<h3>4.3 主機上會留下什麼</h3>
+<p>用情況二（<code>./hc scan</code>）收集時，主機上不會留下收集腳本與收集檔。用情況三時，主機上會有 <code>collect.sh</code> 和產生的 <code>hc-*.tar.gz</code>，交回後請主機管理者刪除。用情況一時，收集檔只存在分析電腦的 <code>reports/日期時間/collected/</code>。</p>
+<p>不論哪種做法，2026 年 11 月的實機測試發現，收集時其他程式會寫自己的紀錄：</p>
+<ul>
+  <li>Ubuntu Pro 用戶端（<code>pro</code> 指令）會更新自己的記錄檔與快取。</li>
+  <li>SSH 登入與 sudo 會寫進系統的登入紀錄（<code>auth.log</code>、journal）。受檢單位事後可以從這些紀錄查到誰在什麼時候檢查過。</li>
+</ul>
+
+<h2>5. 看懂報告</h2>
+<p>報告分成五個部分加一個附錄。下面依序說明，範例畫面取自工具附的三台虛構主機（<code>samples/demo-report/</code>）。</p>
+
+<h3>5.1 摘要：A、B、C、D 四類</h3>
+<img src="images/report-cards.png" alt="報告摘要的四類卡片">
+<p>每一項發現都會歸到四類之一，分類的依據是「訂閱 Ubuntu Pro 能不能解決」：</p>
+<div class="tw"><table>
+<tr><th>類別</th><th>意思</th><th>Ubuntu Pro 能不能解決</th><th>通常怎麼處理</th></tr>
+<tr><td><span class="tag tA">A</span></td><td>修補拿不到：官方的修補只放在延伸維護（esm-infra、esm-apps），沒訂閱的主機用 apt 也裝不到</td><td>能</td><td>訂閱 Ubuntu Pro；同時規劃升級版本</td></tr>
+<tr><td><span class="tag tB">B</span></td><td>修補要重開機才生效：裝了新核心卻沒重開機、很久沒重開機</td><td>部分</td><td>排定重開機；停機困難時評估 Livepatch（只處理高風險核心漏洞）</td></tr>
+<tr><td><span class="tag tC">C</span></td><td>沒有用 CIS／DISA-STIG 的自動稽核工具</td><td>部分</td><td>需要稽核證據時評估 USG，仍要人設定</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>跟 Ubuntu Pro 無關：免費修補沒裝、SSH 與帳號設定等</td><td>不能</td><td>機關資訊人員或維護廠商自己處理，多半當天就能做</td></tr>
+</table></div>
+<p>「需不需要 Pro」是看官方資料寫的修補來源，不是從版本號推測。</p>
+
+<h3>5.2 主機總覽</h3>
+<img src="images/report-overview.png" alt="報告的主機總覽表">
+<div class="tw"><table>
+<tr><th>欄位</th><th>怎麼看</th></tr>
+<tr><td>維護狀態</td><td>「標準維護期內」不用擔心；「需 Pro（ESM）」代表標準維護已結束，要訂閱才有安全更新；「需 Pro＋Legacy」代表連 ESM 也結束了；「已無維護」只能升級</td></tr>
+<tr><td>A、B、C、D</td><td>各類發現的項數</td></tr>
+<tr><td>需 Pro 才能取得的修補</td><td>要訂閱才拿得到的安全公告則數</td></tr>
+<tr><td>未套用的免費修補</td><td>免費、但還沒裝的安全公告則數。這個數字大，代表例行修補沒有在做</td></tr>
+<tr><td>未重開機天數</td><td>超過 90 天會在 B 類提醒</td></tr>
+<tr><td>交件代號</td><td>這台主機在 <code>findings-ai-日期時間.json</code> 裡的代號（H01、H02…）。顧問的分析報告寫 H01 時，用這一欄對回原本的主機。這張對照只在報告裡，不要一起寄出</td></tr>
+</table></div>
+
+<h3>5.3 發現事項：每一列怎麼讀</h3>
+<img src="images/report-findings.png" alt="報告的發現事項表">
+<p>每台主機一張表，一列是一項發現。<b>最重要的是「建議」欄</b>，裡面寫了處理方式，大多附有可以直接執行的指令。</p>
+<div class="tw"><table>
+<tr><th>欄位</th><th>怎麼看</th></tr>
+<tr><td>類別</td><td>A、B、C、D，見 5.1</td></tr>
+<tr><td>嚴重度</td><td>高、中、低。弱點相關的項目，只要有重大或高風險公告就是「高」</td></tr>
+<tr><td>發現</td><td>一句話說明問題，例如「2 個套件有免費的安全修補，還沒安裝」</td></tr>
+<tr><td>說明</td><td>要更新哪些套件、對應幾則安全公告、需不需要重開機</td></tr>
+<tr><td>建議</td><td>怎麼處理。指令請先在測試環境確認，並依單位的變更管理規定執行</td></tr>
+</table></div>
+
+<h3>5.4 每一種發現代表什麼、怎麼處理</h3>
+<div class="tw"><table>
+<tr><th>報告上的寫法</th><th>類別</th><th>代表什麼</th><th>怎麼處理</th></tr>
+<tr><td>作業系統已過標準維護期</td><td>A</td><td>版本已過 5 年標準維護，沒訂閱就沒有安全更新</td><td>訂閱 Ubuntu Pro 並啟用 esm-infra；同時規劃升級</td></tr>
+<tr><td>作業系統已過 ESM 期限</td><td>A</td><td>連 10 年的 ESM 也結束了</td><td>Ubuntu Pro 加購 Legacy 當過渡，盡快升級</td></tr>
+<tr><td>作業系統已無官方安全維護</td><td>D</td><td>所有維護都結束，或不是 LTS 版本</td><td>升級到仍在維護期內的 LTS 版本</td></tr>
+<tr><td>N 個套件的安全修補，要訂閱 Ubuntu Pro 才拿得到</td><td>A</td><td>這些套件的修補只放在延伸維護</td><td>訂閱後執行 <code>sudo pro attach</code> 註冊，再執行 <code>sudo apt update</code> 與 <code>sudo apt upgrade</code></td></tr>
+<tr><td>N 個套件有免費的安全修補，還沒安裝</td><td>D</td><td>修補已經在 Ubuntu 一般的更新來源，只是沒裝</td><td>執行 <code>sudo apt update</code> 與 <code>sudo apt upgrade</code>；包含核心時要重開機</td></tr>
+<tr><td>已訂閱 Ubuntu Pro，但有 N 個套件的安全修補還沒安裝</td><td>D</td><td>已經付費，修補也拿得到，只是沒裝</td><td>同上</td></tr>
+<tr><td>已安裝新核心，但機器還在跑舊核心</td><td>B</td><td>核心修補要重開機才生效</td><td>排定時段重開機；停機困難時評估 Livepatch</td></tr>
+<tr><td>系統標示需要重開機</td><td>B</td><td>有更新在等重開機</td><td>排定時段重開機</td></tr>
+<tr><td>已連續運作 N 天沒有重開機</td><td>B</td><td>核心修補很可能沒有生效</td><td>確認停機限制，保留定期重開機的時段</td></tr>
+<tr><td>未使用 CIS／DISA-STIG 基準的自動化稽核工具</td><td>C</td><td>沒有安裝 Ubuntu Security Guide（USG）</td><td>需要設定基準的稽核證據時評估 USG</td></tr>
+<tr><td>SSH 允許 root 直接登入</td><td>D</td><td>root 帳號可以直接從網路登入</td><td>把 <code>PermitRootLogin</code> 改成 <code>no</code>，再執行 <code>sudo systemctl reload ssh</code></td></tr>
+<tr><td>SSH 允許空密碼登入</td><td>D</td><td>沒設密碼的帳號也能登入</td><td>把 <code>PermitEmptyPasswords</code> 改成 <code>no</code>，再 reload</td></tr>
+<tr><td>SSH 允許密碼登入</td><td>D</td><td>帳號可能被猜密碼</td><td>確認每位管理者都能用金鑰登入後，把 <code>PasswordAuthentication</code> 改成 <code>no</code></td></tr>
+<tr><td>主機防火牆（ufw）未啟用</td><td>D</td><td>主機本身沒有開防火牆</td><td>先確認網路層有沒有防火牆。要啟用時先執行 <code>sudo ufw allow OpenSSH</code>，再執行 <code>sudo ufw enable</code>，避免把自己鎖在外面</td></tr>
+<tr><td>有 root 以外的最高權限帳號</td><td>D</td><td>有其他 UID 為 0 的帳號</td><td>依建議欄的指令找出帳號，確認用途，不需要就移除</td></tr>
+<tr><td>有空密碼帳號</td><td>D</td><td>有帳號沒設密碼</td><td>依建議欄的指令找出帳號，設定密碼或鎖定</td></tr>
+<tr><td>已設定自動更新，但套件清單 N 天沒有成功更新</td><td>D</td><td>自動更新有開，但已經很久沒成功，修補不會自動安裝。常見原因是連不到套件來源（網路、Proxy、DNS）</td><td>在主機上執行 <code>sudo apt update</code>，看錯誤訊息，修好網路或來源設定；隔天再確認有更新</td></tr>
+<tr><td>已設定自動更新，但有 N 則發布超過 7 天的免費安全修補還沒安裝</td><td>D</td><td>自動更新有開、套件清單也有更新，修補卻沒有裝上。可能只下載不安裝、某些套件被排除或保留、安裝時出錯，或主機剛安裝、剛啟用自動更新。只手動裝一次，之後還會再累積</td><td>看 <code>/var/log/unattended-upgrades/</code> 的紀錄；執行 <code>sudo unattended-upgrade --dry-run --debug</code> 看哪些套件被略過</td></tr>
+<tr><td>未啟用自動安全更新</td><td>D</td><td>沒有每天自動裝安全更新</td><td>依變更管理規定決定；要啟用時執行 <code>sudo dpkg-reconfigure -plow unattended-upgrades</code></td></tr>
+<tr><td>有 N 個非 Ubuntu 官方來源的套件</td><td>D</td><td>第三方或來源不明的套件不在 Ubuntu 的修補範圍</td><td>盤點來源，向原廠確認更新方式</td></tr>
+</table></div>
+
+<h3>5.5 實例：照著報告修一台主機</h3>
+<p>以第 4 章那台 20.04 的 H01 為例，報告上有這一列：</p>
+<div class="tw"><table>
+<tr><th>類別</th><th>嚴重度</th><th>發現</th><th>說明</th><th>建議</th></tr>
+<tr><td>D</td><td>高</td><td>2 個套件有免費的安全修補，還沒安裝</td><td>要更新的套件：ubuntu-advantage-tools、apport。對應 3 則官方安全公告，其中重大或高風險 1 則。這些修補放在 Ubuntu 一般的更新來源，不需要 Ubuntu Pro</td><td>在主機上執行 sudo apt update 與 sudo apt upgrade……</td></tr>
+</table></div>
+<p>意思是：這台有兩個套件已經有免費修補，只是沒裝。登入那台主機執行：</p>
+<pre>sudo apt update
+sudo apt upgrade</pre>
+<p>沒有訂閱 Ubuntu Pro 的主機，<code>apt upgrade</code> 只會裝免費的修補，A 類那 178 則仍然拿不到。裝完後重新健檢一次，D 類這一列就會消失。</p>
+
+<h3>5.6 明細：要更新哪些套件</h3>
+<img src="images/report-free-detail.png" alt="報告的免費修補明細">
+<p>每台主機的發現事項表下方有可以展開的明細，依情況最多三組：</p>
+<ul>
+  <li><b>免費就能修補</b>：放在前面，套件不多時預設展開。這些是馬上就能處理的。</li>
+  <li><b>已訂閱 Ubuntu Pro，還沒安裝</b>：主機已經訂閱，修補拿得到，只是沒裝。</li>
+  <li><b>要訂閱 Ubuntu Pro 才能修補</b>：預設收合。</li>
+</ul>
+<p>明細一列是一個套件，寫出最高嚴重度、對應幾則公告、修補來源（「Ubuntu 一般更新」是免費的來源，esm-infra、esm-apps 是 Ubuntu Pro 的延伸維護），以及「已安裝版本 → 修補版本」。再展開「逐則公告」可以看到每則安全公告（USN）的標題。</p>
+<p>報告上的套件名稱是「原始碼套件」名稱，一個原始碼套件可能對應主機上好幾個實際安裝的套件，名稱不一定相同。例如報告寫 <code>glibc</code>，主機上看到的是 <code>libc6</code>。照建議欄執行 <code>sudo apt upgrade</code> 會一起更新，不必逐一對照。</p>
+
+<h3>5.7 重大與高風險公告：只先修這幾則</h3>
+<p>有重大或高風險的安全公告時，每台主機的發現事項表下方會列出這些公告，並附上「只修這一則」的指令：</p>
+<ul>
+  <li><code>sudo pro fix USN-編號</code>：主機能連到 Canonical，或機關內部有 Landscape 離線（air-gapped）環境時使用。</li>
+  <li><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade 套件…</code>：只升級這則公告點名、而且主機上真的有裝的套件。上面那種不能用時改用這行。</li>
+  <li>核心公告合併成一列：新核心是不同的套件名稱，要用 <code>sudo apt update</code> 與 <code>sudo apt upgrade</code> 安裝，再重開機；停機困難時評估 Livepatch。</li>
+  <li>寫「要先訂閱 Ubuntu Pro」的，修補只放在延伸維護，要先訂閱並執行 <code>sudo pro attach</code>。</li>
+  <li><b>攻擊途徑（CVSS）</b>：取自官方資料裡這則公告各 CVE 的 CVSS 向量，列出可及範圍最大的一種與最高分數，例如「網路（最高 9.2）」。「網路」代表不必先登入主機就可能被利用，對外服務的主機要先修這些；「相鄰網路」要在同一個網段；「本機」要先能登入或在主機上執行程式；「實體接觸」要能碰到機器；官方沒附 CVSS 時寫「官方未提供」。核心公告合併的那一列，取各則中範圍最大的途徑與最高分。分數是官方原值，CVSS 3.x 與 4.0 混用。這是「可能」的途徑，不代表一定能被利用。</li>
+</ul>
+<p>這一段可以收合：表格超過 10 列（核心公告合併算一列）時預設收起，點標題就能展開。列印或另存 PDF 時會自動全部展開。</p>
+<div class="note">只修重大與高風險時，其餘公告會一直累積。這是排不出時段時的權宜做法，仍要排時段執行 <code>sudo apt update</code> 與 <code>sudo apt upgrade</code> 全面更新。執行前一樣依變更管理規定，先在測試環境確認。</div>
+
+<h3>5.8 其他段落</h3>
+<ul>
+  <li><b>未能檢查的項目</b>：收集時權限不足或主機沒有對應工具，<b>不代表沒有問題</b>。通常是沒有用 sudo。</li>
+  <li><b>比對引擎對照</b>：用了 <code>--engine both</code> 才會出現，兩個比對引擎的結果應該一樣。</li>
+  <li><b>四、建議處理順序</b>：依這份報告實際出現的項目產生，沒出現的類別不會列出。每一步都寫了涉及哪幾台主機。</li>
+  <li><b>五、檢查範圍與限制</b>：說明這份健檢沒涵蓋什麼，交付報告時請一併說明。</li>
+  <li><b>附錄：資料來源</b>：這次用的官方資料是哪一天產生的、檔案有沒有被改過。「與下載紀錄」要是「一致」。</li>
+</ul>
+
+<h2>6. 交給顧問分析</h2>
+<p>報告列出了每台主機還沒裝的更新與設定問題，但看不到主機做什麼用、誰連得到，所以排不出最合適的處理順序。把去識別化的結果檔交給健檢顧問，再回答一份主機情境問卷，顧問會依您的情況提供給主管看的報告：整體建議、請主管決定的事、各主機狀況、建議處理時程與 Ubuntu Pro 評估，可以存成 PDF，也可以直接截圖放進簡報。</p>
+
+<h3>6.1 先確認兩件事</h3>
+<div class="step"><b class="n">1</b><div><p><b>確認單位規定</b>：先問資訊單位能不能把去識別化的健檢結果交給外部顧問。</p></div></div>
+<div class="step"><b class="n">2</b><div><p><b>找到要交的檔案</b>：報告資料夾裡的 <code>findings-ai-日期時間.json</code>。主機代號已經改成 H01、H02…，不含受檢單位名稱，收集時間只留日期。報告檔與 <code>oval-detail.json</code> 自己留著，不必交。</p>
+<p>顧問的報告會寫 H01、H02，用報告主機總覽的「交件代號」欄對回原本的主機。</p></div></div>
+
+<h3>6.2 做法一：用上傳網頁（建議）</h3>
+<p>網址：<code>https://ikusupuroaj.github.io/Ubuntu-Server-Audit/upload/</code></p>
+<div class="step"><b class="n">1</b><div><p>用瀏覽器打開上傳網頁，選擇 <code>findings-ai-日期時間.json</code>。檔案只在您的瀏覽器裡讀取，按下最後的「送出」之前不會傳到任何地方。</p></div></div>
+<div class="step"><b class="n">2</b><div><p>每台主機一個區塊，點標題可以展開或收合。依實際情況勾選：</p>
+<ul>
+  <li><b>必答</b>（標 <span style="color:#c62828">*</span>）：用途、可達性、重要性。沒答完不能送出，按下方的「前往未答的題目」可以直接跳過去。</li>
+  <li><b>選答</b>：維護窗口、處理方向、補償控制（可達性不是「只限管理網段」或「完全隔離」、而且這台主機有可能經由網路受影響的更新時才會出現）。沒填會出現紅字提醒，因為會影響判讀的準確度。</li>
+  <li>不清楚的題目選「不確定」，也算已回答。不需要提供 IP、主機名稱、帳號或設定檔。</li>
+</ul></div></div>
+<div class="step"><b class="n">3</b><div><p>填寫聯絡資料（機關名稱、單位、聯絡人、Email，電話選填），閱讀個人資料蒐集告知後勾選同意，按「送出」。</p></div></div>
+<div class="step"><b class="n">4</b><div><p>畫面會顯示送件編號（例如 <code>HC-20261121-1502-K7Q3</code>），請記下來，聯絡顧問時提供即可。</p></div></div>
+<p>送出的內容只有 <code>findings-ai-日期時間.json</code>、問卷答案與聯絡資料，存放在顧問的 Google 雲端硬碟；結案後滿 90 天刪除（雲端硬碟的垃圾桶會再保留 30 天後永久清除）。</p>
+<div class="note">按「送出」時，瀏覽器會把資料傳到 Google 的服務（<code>script.google.com</code>）。所在網路擋住 Google 服務時會送不出去，網頁會自動改成下載回答檔，請改用做法二。</div>
+
+<h3>6.3 做法二：用 Email 寄給顧問</h3>
+<ul>
+  <li><b>先填問卷再寄</b>：照做法一打開上傳網頁、選檔、勾選，最後按「不上傳，下載回答檔」，會下載 <code>answers-送件編號.json</code>。把 <code>findings-ai-日期時間.json</code> 和這個回答檔一起寄給顧問。這種做法不用填聯絡資料，檔案也不會經過網路上傳。</li>
+  <li><b>只寄結果檔</b>：直接把 <code>findings-ai-日期時間.json</code> 寄給顧問，顧問會回信請您填問卷；打不開網頁時，顧問會改寄純文字問卷，在選項前打 x 回信即可。</li>
+</ul>
+
+<h3>6.4 顧問會給您什麼</h3>
+<div class="tw"><table>
+<tr><th>內容</th><th>說明</th></tr>
+<tr><td>主管報告</td><td>給不熟技術的主管看：整體建議、請主管決定的事（含要不要預算）、各主機狀況、建議處理時程、Ubuntu Pro 評估、仍待確認的事。報告檔是 16:9 的投影片版面，用瀏覽器開啟後按「下載 PDF」可存成 PDF，每頁也可以直接截圖貼進簡報</td></tr>
+<tr><td>處理追蹤表</td><td>給系統維護廠商：每個項目的做法、建議期限與負責單位，以及要優先安裝的更新與指令</td></tr>
+</table></div>
+<div class="note">報告依健檢資料與您提供的主機用途整理，不是實際的入侵測試。期限是顧問建議，機關有自己的規定時以規定為準。</div>
+
+<h2>7. 更新官方資料與常見問題</h2>
+
+<h3>7.1 更新官方資料的方法</h3>
+<div class="tw"><table>
+<tr><th>情況</th><th>做法</th></tr>
+<tr><td>能連 Canonical 官方網站（建議）</td><td><code>./hc update</code></td></tr>
+<tr><td>只能連 GitHub</td><td>用 git 下載的：<code>git pull</code>；不是用 git 下載的：<code>./hc update --from github</code></td></tr>
+<tr><td>完全不能上網</td><td>在能上網的電腦更新後，把整個資料夾帶進去，再執行 <code>./hc update --verify</code></td></tr>
+<tr><td>只更新部分版本</td><td><code>./hc update --releases 20.04,22.04</code></td></tr>
+<tr><td>使用自己保管的資料</td><td>在指令後面加 <code>--data 資料夾路徑</code></td></tr>
+<tr><td>每次掃描前自動檢查新資料</td><td>在 <code>scan</code>、<code>report</code>、<code>local</code> 後面加 <code>--refresh-data</code>，連不上會改用已下載的資料</td></tr>
+</table></div>
+<p>GitHub 上的資料是本專案每天從 Canonical 官方網站取得的副本，檔案沒有修改過，下載後一樣會核對內容與 SHA-256。</p>
+
+<h3>7.2 常見問題</h3>
+
+<p><b>Q：出現「REMOTE HOST IDENTIFICATION HAS CHANGED」或「Host key verification failed」</b></p>
+<p>這台主機的識別碼和分析電腦上次記下的不同。常見原因是主機重灌，或 IP 換給了另一台機器。先向主機管理者確認是同一台、而且確實重灌過，再刪掉舊紀錄並重新登入一次：</p>
+<pre>ssh-keygen -R 10.0.0.5
+ssh admin@10.0.0.5 'echo OK'</pre>
+<p>SSH 不是 22 埠時，紀錄的寫法不同，例如 2222 埠要這樣刪、這樣登入：</p>
+<pre>ssh-keygen -R "[10.0.0.5]:2222"
+ssh -p 2222 admin@10.0.0.5 'echo OK'</pre>
+<p>無法確認原因時不要刪，請先通報資安人員。</p>
+
+<p><b>Q：出現「找不到主機清單 hosts.txt」</b></p>
+<p>還沒建立主機清單，照 3.1 節做。</p>
+
+<p><b>Q：出現「Permission denied」</b></p>
+<p>帳號或金鑰不對，照 3.2 節確認 <code>ssh 帳號@IP 'echo OK'</code> 能不用密碼登入。</p>
+
+<p><b>Q：出現「Could not resolve hostname」</b></p>
+<p>分析電腦查不到這個主機名稱，<code>hosts.txt</code> 改寫 IP。</p>
+
+<p><b>Q：用了 --sudo，SSH 設定、防火牆還是「未能檢查」</b></p>
+<p>那台主機的帳號不能免密碼 sudo，工具自動改用了一般權限，畫面上會有說明。可以請管理者用情況三的 <code>sudo bash collect.sh --tag 代號</code> 收集。</p>
+
+<p><b>Q：畫面說官方資料超過 7 天</b></p>
+<p>照 7.1 節更新，或下次加 <code>--refresh-data</code>。不能上網時照樣可以分析，只是之後公布的弱點不會列入，報告上也會註明。</p>
+
+<p><b>Q：報告說「已設定自動更新，但套件清單 N 天沒有成功更新」</b></p>
+<p>自動更新有開，但主機很久沒有成功取得新的套件清單，所以修補一直沒裝。在主機上執行 <code>sudo apt update</code>，看最後幾行的錯誤訊息：常見的是連不到套件來源、Proxy 沒設好，或內部鏡像站停止同步。修好後隔天再檢查一次。</p>
+
+<p><b>Q：報告說「已設定自動更新，但有 N 則發布超過 7 天的免費安全修補還沒安裝」</b></p>
+<p>套件清單有更新，代表網路和來源沒問題，但自動更新沒有把修補裝上。先看 <code>/var/log/unattended-upgrades/</code> 的紀錄，再執行 <code>sudo unattended-upgrade --dry-run --debug</code> 看哪些套件被略過；用 <code>apt-mark showhold</code> 確認有沒有被保留的套件。找出原因再手動更新，否則之後還會累積。</p>
+
+<p><b>Q：報告上數字跟主機上 <code>pro security-status</code> 不一樣</b></p>
+<p>報告算的是「安全公告則數」，<code>pro security-status</code> 算的是「套件數」，單位不同。兩邊應該同時為 0 或同時大於 0。</p>
+
+<p><b>Q：檢查的是 LXD 或 Docker 容器</b></p>
+<p>容器和主機共用核心，B 類（核心、重開機）的結果不準。</p>
+
+<h2>8. 附錄：指令速查</h2>
+<div class="tw"><table>
+<tr><th>要做的事</th><th>指令</th></tr>
+<tr><td>下載工具（含官方資料）</td><td><code>git clone https://github.com/ikusupuroaj/Ubuntu-Server-Audit.git</code></td></tr>
+<tr><td>看官方資料日期</td><td><code>./hc update --list</code></td></tr>
+<tr><td>更新官方資料</td><td><code>./hc update</code> 或 <code>git pull</code></td></tr>
+<tr><td>核對資料沒被改過</td><td><code>./hc update --verify</code></td></tr>
+<tr><td>檢查這台電腦自己</td><td><code>./hc local --sudo</code></td></tr>
+<tr><td>建立主機清單</td><td><code>cp hosts.example.txt hosts.txt</code></td></tr>
+<tr><td>用 SSH 收集並分析</td><td><code>./hc scan hosts.txt --sudo</code></td></tr>
+<tr><td>主機管理者自己收集</td><td><code>sudo bash collect.sh --tag H01</code></td></tr>
+<tr><td>分析交回來的收集檔</td><td><code>./hc report hc-*.tar.gz</code></td></tr>
+<tr><td>交給顧問分析</td><td>用上傳網頁送出報告資料夾裡的 <code>findings-ai-日期時間.json</code>（第 6 章）</td></tr>
+<tr><td>整份報告去識別化</td><td>原本的指令後面加 <code>--deidentify</code></td></tr>
+<tr><td>掃描前先檢查新的官方資料</td><td>原本的指令後面加 <code>--refresh-data</code></td></tr>
+<tr><td>看完整參數說明</td><td><code>./hc scan -h</code>、<code>./hc report -h</code></td></tr>
+</table></div>
+
+<p class="mut">授權：工具程式碼採用 Apache License 2.0。官方 OVAL 資料的著作權屬於 Canonical Ltd.，授權 CC BY-SA 4.0，本專案原樣轉存、未經修改。</p>
+
+</main>
+</body>
+</html>

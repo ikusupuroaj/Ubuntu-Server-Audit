@@ -1,0 +1,4 @@
+permitrootlogin yes
+passwordauthentication yes
+
+__EXIT__=0

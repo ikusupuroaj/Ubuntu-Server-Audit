@@ -1,0 +1,2 @@
+{"_schema_version": "v1", "result": "success", "data": {"attributes": {"summary": {"num_installed_packages": 600, "num_third_party_packages": 3, "num_unknown_packages": 0}}}}
+__EXIT__=0

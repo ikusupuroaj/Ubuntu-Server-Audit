@@ -1,0 +1,10 @@
+bash	5.0-6ubuntu1	install ok installed	bash	amd64
+openssl	1.1.1f-1ubuntu2	install ok installed	openssl	amd64
+libssl1.1	1.1.1f-1ubuntu2	install ok installed	openssl	amd64
+sudo	1.8.31-1ubuntu1	install ok installed	sudo	amd64
+nginx-core	1.18.0-0ubuntu1	install ok installed	nginx	amd64
+nginx	1.18.0-0ubuntu1	install ok installed	nginx	amd64
+imagemagick	8:6.9.10.23+dfsg-2.1ubuntu11	install ok installed	imagemagick	amd64
+linux-image-5.4.0-150-generic	5.4.0-150.160	install ok installed	linux-signed	amd64
+linux-image-5.4.0-169-generic	5.4.0-169.179	install ok installed	linux-signed	amd64
+__EXIT__=0

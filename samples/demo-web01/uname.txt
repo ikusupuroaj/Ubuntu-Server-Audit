@@ -1,0 +1,2 @@
+Linux 5.15.0-125-generic x86_64
+__EXIT__=0

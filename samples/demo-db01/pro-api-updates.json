@@ -1,0 +1,40 @@
+{
+ "_schema_version": "v1",
+ "result": "success",
+ "errors": [],
+ "warnings": [],
+ "data": {
+  "type": "PackageUpdates",
+  "meta": {
+   "environment_vars": []
+  },
+  "attributes": {
+   "summary": {
+    "num_updates": 2,
+    "num_esm_infra_updates": 2,
+    "num_esm_apps_updates": 0,
+    "num_standard_security_updates": 0,
+    "num_standard_updates": 0
+   },
+   "updates": [
+    {
+     "package": "libc6",
+     "version": "2.23-0ubuntu11.3+esm5",
+     "provided_by": "esm-infra",
+     "status": "pending_attach",
+     "origin": "esm.ubuntu.com",
+     "download_size": 100000
+    },
+    {
+     "package": "openssh-server",
+     "version": "1:7.2p2-4ubuntu2.10+esm6",
+     "provided_by": "esm-infra",
+     "status": "pending_attach",
+     "origin": "esm.ubuntu.com",
+     "download_size": 100000
+    }
+   ]
+  }
+ }
+}
+__EXIT__=0

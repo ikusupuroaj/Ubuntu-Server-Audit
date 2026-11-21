@@ -1,0 +1,4 @@
+permitrootlogin prohibit-password
+passwordauthentication yes
+
+__EXIT__=0

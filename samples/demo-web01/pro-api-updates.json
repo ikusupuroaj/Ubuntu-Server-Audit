@@ -1,0 +1,48 @@
+{
+ "_schema_version": "v1",
+ "result": "success",
+ "errors": [],
+ "warnings": [],
+ "data": {
+  "type": "PackageUpdates",
+  "meta": {
+   "environment_vars": []
+  },
+  "attributes": {
+   "summary": {
+    "num_updates": 3,
+    "num_esm_infra_updates": 0,
+    "num_esm_apps_updates": 1,
+    "num_standard_security_updates": 2,
+    "num_standard_updates": 0
+   },
+   "updates": [
+    {
+     "package": "curl",
+     "version": "7.81.0-1ubuntu1.20",
+     "provided_by": "standard-security",
+     "status": "upgrade_available",
+     "origin": "archive.ubuntu.com",
+     "download_size": 100000
+    },
+    {
+     "package": "libcurl4",
+     "version": "7.81.0-1ubuntu1.20",
+     "provided_by": "standard-security",
+     "status": "upgrade_available",
+     "origin": "archive.ubuntu.com",
+     "download_size": 100000
+    },
+    {
+     "package": "redis-server",
+     "version": "5:6.0.16-1ubuntu1+esm1",
+     "provided_by": "esm-apps",
+     "status": "pending_attach",
+     "origin": "esm.ubuntu.com",
+     "download_size": 100000
+    }
+   ]
+  }
+ }
+}
+__EXIT__=0

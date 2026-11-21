@@ -1,0 +1,6 @@
+bash	4.3-14ubuntu1	install ok installed	bash	amd64
+libc6	2.23-0ubuntu3	install ok installed	glibc	amd64
+openssh-server	1:7.2p2-4ubuntu2.8	install ok installed	openssh	amd64
+sudo	1.8.16-0ubuntu1	install ok installed	sudo	amd64
+linux-image-4.4.0-210-generic	4.4.0-210.220	install ok installed	linux-signed	amd64
+__EXIT__=0

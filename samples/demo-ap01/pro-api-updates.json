@@ -1,0 +1,64 @@
+{
+ "_schema_version": "v1",
+ "result": "success",
+ "errors": [],
+ "warnings": [],
+ "data": {
+  "type": "PackageUpdates",
+  "meta": {
+   "environment_vars": []
+  },
+  "attributes": {
+   "summary": {
+    "num_updates": 5,
+    "num_esm_infra_updates": 3,
+    "num_esm_apps_updates": 2,
+    "num_standard_security_updates": 0,
+    "num_standard_updates": 0
+   },
+   "updates": [
+    {
+     "package": "openssl",
+     "version": "1.1.1f-1ubuntu2.24+esm1",
+     "provided_by": "esm-infra",
+     "status": "pending_attach",
+     "origin": "esm.ubuntu.com",
+     "download_size": 100000
+    },
+    {
+     "package": "libssl1.1",
+     "version": "1.1.1f-1ubuntu2.24+esm1",
+     "provided_by": "esm-infra",
+     "status": "pending_attach",
+     "origin": "esm.ubuntu.com",
+     "download_size": 100000
+    },
+    {
+     "package": "sudo",
+     "version": "1.8.31-1ubuntu1.5+esm1",
+     "provided_by": "esm-infra",
+     "status": "pending_attach",
+     "origin": "esm.ubuntu.com",
+     "download_size": 100000
+    },
+    {
+     "package": "nginx",
+     "version": "1.18.0-0ubuntu1.4+esm1",
+     "provided_by": "esm-apps",
+     "status": "pending_attach",
+     "origin": "esm.ubuntu.com",
+     "download_size": 100000
+    },
+    {
+     "package": "imagemagick",
+     "version": "8:6.9.10.23+dfsg-2.1ubuntu11.9+esm1",
+     "provided_by": "esm-apps",
+     "status": "pending_attach",
+     "origin": "esm.ubuntu.com",
+     "download_size": 100000
+    }
+   ]
+  }
+ }
+}
+__EXIT__=0

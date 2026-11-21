@@ -1,0 +1,2 @@
+uid0_accounts=1
+__EXIT__=0

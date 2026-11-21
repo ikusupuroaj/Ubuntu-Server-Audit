@@ -1,0 +1,474 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ubuntu 主機資安健檢報告</title><style>
+:root{--bg:#fff;--fg:#1d1d1f;--mut:#5f6368;--line:#e2e4e8;--card:#f6f7f9;--a:#c62828;--b:#ef6c00;--c:#1565c0;--d:#546e7a;--warn:#fff4e5}
+@media (prefers-color-scheme:dark){:root{--bg:#121417;--fg:#e8eaed;--mut:#9aa0a6;--line:#2f3337;--card:#1c1f23;--warn:#3a2c12}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 -apple-system,"Noto Sans TC","Microsoft JhengHei",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 64px}h1{font-size:26px;margin:0 0 4px}h2{font-size:20px;margin:36px 0 12px;border-bottom:1px solid var(--line);padding-bottom:6px}h3{font-size:17px;margin:24px 0 8px}
+.mut{color:var(--mut)}.warn{background:var(--warn);border-left:4px solid var(--b);padding:10px 14px;border-radius:6px;margin:12px 0}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;margin:8px 0 16px;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600;white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:12px 0}.card{background:var(--card);border-radius:10px;padding:14px;border-top:4px solid var(--line)}
+.card b{font-size:28px;display:block}.card.A{border-color:var(--a)}.card.B{border-color:var(--b)}.card.C{border-color:var(--c)}.card.D{border-color:var(--d)}
+.tag{display:inline-block;border-radius:4px;padding:0 6px;font-size:12px;font-weight:700;color:#fff}.tA{background:var(--a)}.tB{background:var(--b)}.tC{background:var(--c)}.tD{background:var(--d)}
+details{background:var(--card);border-radius:8px;padding:8px 12px;margin:10px 0}summary{cursor:pointer;font-weight:600}
+h4{font-size:15px;margin:18px 0 4px}code{font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--card);padding:1px 4px;border-radius:4px;word-break:break-all}
+</style></head><body><main>
+<h1>Ubuntu 主機資安健檢報告</h1>
+<p class="mut">受檢單位：示範單位（虛構）　執行單位：示範執行單位（虛構）　判斷基準月份：2026-11　分析程式：offline-ubuntu-healthcheck 0.7.0</p>
+<h2>一、摘要</h2>
+<p>共 <b>3</b> 台主機，其中 <b>2</b> 台已過標準維護期；發現事項共 23 項，依「Ubuntu Pro 能否解決」分成四類。</p>
+<div class="cards">
+<div class="card A"><span class="tag tA">A</span><b>5</b>修補取不到（訂閱 Ubuntu Pro 可解決）<br><span class="mut">Ubuntu Pro 能否解決：是</span></div>
+<div class="card B"><span class="tag tB">B</span><b>4</b>修補需要停機（Ubuntu Pro 的 Livepatch 可降低）<br><span class="mut">Ubuntu Pro 能否解決：部分</span></div>
+<div class="card C"><span class="tag tC">C</span><b>2</b>合規與設定基準（Ubuntu Pro 提供工具，仍需人力）<br><span class="mut">Ubuntu Pro 能否解決：部分</span></div>
+<div class="card D"><span class="tag tD">D</span><b>12</b>與 Ubuntu Pro 無關（自行處理、升級或其他服務）<br><span class="mut">Ubuntu Pro 能否解決：否</span></div>
+</div><p class="mut">D 類與 Ubuntu Pro 無關，同樣列出，讓受檢單位掌握完整風險。每一項發現的「建議」欄寫了處理方式；各類別的意思與處理步驟，見使用者手冊（docs/user-guide.pdf）第 5 章。</p>
+<h2>二、主機總覽</h2><div class="tw"><table><tr><th>主機</th><th>交件代號</th><th>版本</th><th>維護狀態</th><th>A</th><th>B</th><th>C</th><th>D</th><th>需 Pro 才能取得的修補</th><th>未套用的免費修補</th><th>執行中核心</th><th>未重開機天數</th></tr>
+<tr><td><b>demo-db01</b></td><td>H01</td><td>Ubuntu 16.04.7 LTS</td><td>需 Pro＋Legacy</td><td>2</td><td>1</td><td>0</td><td>3</td><td>87 則安全公告</td><td>14 則安全公告</td><td>4.4.0-210-generic</td><td>480</td></tr>
+<tr><td><b>demo-web01</b></td><td>H02</td><td>Ubuntu 22.04.5 LTS</td><td>標準維護期內</td><td>1</td><td>1</td><td>1</td><td>3</td><td>2 則安全公告</td><td>77 則安全公告</td><td>5.15.0-125-generic</td><td>30</td></tr>
+<tr><td><b>demo-ap01</b></td><td>H03</td><td>Ubuntu 20.04.6 LTS</td><td>需 Pro（ESM）</td><td>2</td><td>2</td><td>1</td><td>6</td><td>52 則安全公告</td><td>74 則安全公告</td><td>5.4.0-150-generic</td><td>200</td></tr>
+</table></div><p class="mut">維護年限說明：LTS 版本標準維護 5 年（只涵蓋 Main 套件庫）；訂閱 Ubuntu Pro（ESM）共 10 年（含 Universe）；加購 Legacy 最長 15 年。</p>
+<p class="mut">交件代號是 findings-ai-20261121-142928.json（交給顧問分析的去識別化檔案）裡的主機代號；這張對照表只在本報告，請不要一起寄出。</p>
+<h2>三、發現事項（依主機）</h2>
+<h3>demo-db01（Ubuntu 16.04.7 LTS）</h3>
+<p>維護狀態：ESM 已於 2026-05 結束；需 Ubuntu Pro 加購 Legacy，最長到 2031-05</p>
+<div class="tw"><table><tr><th>類別</th><th>嚴重度</th><th>發現</th><th>說明</th><th>建議</th><th>Pro 能否解決</th></tr>
+<tr><td><span class="tag tA">A</span></td><td>高</td><td>作業系統已過 ESM 期限</td><td>ESM 已於 2026-05 結束；需 Ubuntu Pro 加購 Legacy，最長到 2031-05</td><td>需要 Ubuntu Pro 加上 Legacy 加購；建議同步規劃升級，Legacy 適合當作遷移期的過渡</td><td>是</td></tr>
+<tr><td><span class="tag tA">A</span></td><td>高</td><td>5 個套件的安全修補，要訂閱 Ubuntu Pro 才拿得到</td><td>要更新的套件：linux、sudo、openssh、glibc、bash。對應 87 則官方安全公告，其中重大或高風險 61 則；修補放在 esm-infra（75 則）、esm-infra-legacy（12 則），沒有訂閱的主機用 apt 也裝不到。其中包含核心更新，安裝後要重開機才生效。主機上的 Ubuntu Pro 用戶端另外回報 2 個套件待取得，可互相對照</td><td>訂閱 Ubuntu Pro，在主機上執行 sudo pro attach 註冊，再執行 sudo apt update 與 sudo apt upgrade</td><td>是</td></tr>
+<tr><td><span class="tag tB">B</span></td><td>中</td><td>已連續運作 480 天沒有重開機</td><td>長時間不重開機，核心修補很可能沒有生效</td><td>確認停機限制；Ubuntu Pro 的 Livepatch 只處理高風險與重大核心漏洞，不能取代所有重開機</td><td>部分</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>高</td><td>4 個套件有免費的安全修補，還沒安裝</td><td>要更新的套件：glibc、sudo、bash、linux。對應 14 則官方安全公告，其中重大或高風險 3 則。這些修補放在 Ubuntu 一般的更新來源，不需要 Ubuntu Pro。其中包含核心更新，安裝後要重開機才生效</td><td>在主機上執行 sudo apt update 與 sudo apt upgrade；建議排定固定的修補時段，或啟用自動安全更新</td><td>否</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>中</td><td>SSH 允許密碼登入</td><td>SSH 設定 PasswordAuthentication 為 yes，帳號可能被猜密碼</td><td>先確認每位管理者都能用金鑰登入，再把 PasswordAuthentication 改為 no，執行 sudo systemctl reload ssh</td><td>否</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>低</td><td>未啟用自動安全更新</td><td>unattended-upgrades 沒有設定為每天執行</td><td>依單位的變更管理規定決定是否啟用；要啟用時執行 sudo dpkg-reconfigure -plow unattended-upgrades</td><td>否</td></tr>
+</table></div>
+<details open><summary>重大與高風險公告（64 則）：只修這一則的指令</summary><p class="mut">只修重大與高風險公告時，其餘公告會累積，仍建議排時段執行 sudo apt update 與 sudo apt upgrade 全面更新。核心公告修完要重開機才生效（停機困難時可評估 Livepatch）。sudo pro fix 需要主機能連到 Canonical，或內部有 Landscape 離線（air-gapped）環境；兩種都沒有時，用 apt 那一行。「攻擊途徑」取自官方資料裡這則公告各 CVE 的 CVSS 向量，列出可及範圍最大的一種與最高分數（CVSS 3.x 與 4.0 混用）：網路＝不必先登入主機就可能被利用，對外服務的主機要優先處理；相鄰網路＝要在同一個網段；本機＝要先能登入或在主機上執行程式；實體接觸＝要能碰到機器；官方未提供＝官方資料沒附 CVSS。核心公告合併的那一列，取各則中範圍最大的途徑與最高分。這是可能的途徑，不代表一定能被利用。</p>
+<div class="tw"><table><tr><th>安全公告</th><th>嚴重度</th><th>攻擊途徑（CVSS）</th><th>套件</th><th>指令</th></tr>
+<tr><td>核心公告 60 則：USN-7332-1、USN-7797-1、USN-8548-2、USN-8662-1、USN-8725-1、USN-8864-1 等</td><td>重大</td><td>網路（最高 9.8）</td><td>linux</td><td>要先訂閱 Ubuntu Pro 並執行 sudo pro attach；之後：<br><code>sudo apt update &amp;&amp; sudo apt upgrade，完成後重開機（sudo reboot）；停機困難時評估 Livepatch</code></td></tr>
+<tr><td>USN-7604-2 -- Sudo vulnerability</td><td>高</td><td>本機（最高 2.8）</td><td>sudo</td><td>要先訂閱 Ubuntu Pro 並執行 sudo pro attach；之後：<br><code>sudo pro fix USN-7604-2</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade sudo</code></td></tr>
+<tr><td>USN-3304-1 -- Sudo vulnerability</td><td>高</td><td>本機（最高 6.4）</td><td>sudo</td><td><code>sudo pro fix USN-3304-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade sudo</code></td></tr>
+<tr><td>USN-3534-1 -- GNU C Library vulnerabilities</td><td>高</td><td>網路（最高 9.8）</td><td>glibc</td><td><code>sudo pro fix USN-3534-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade libc6</code></td></tr>
+<tr><td>USN-4705-1 -- Sudo vulnerabilities</td><td>高</td><td>本機（最高 7.8）</td><td>sudo</td><td><code>sudo pro fix USN-4705-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade sudo</code></td></tr>
+</table></div>
+</details>
+<details open><summary>免費就能修補：4 個套件、14 則公告</summary>
+<div class="tw"><table><tr><th>套件（原始碼套件名稱）</th><th>最高嚴重度</th><th>公告數</th><th>修補來源</th><th>已安裝 → 修補版本</th></tr>
+<tr><td>glibc</td><td>高</td><td>6</td><td>Ubuntu 一般更新</td><td>2.23-0ubuntu3 → 2.23-0ubuntu11.3</td></tr>
+<tr><td>sudo</td><td>高</td><td>5</td><td>Ubuntu 一般更新</td><td>1.8.16-0ubuntu1 → 1.8.16-0ubuntu1.10</td></tr>
+<tr><td>bash</td><td>中</td><td>2</td><td>Ubuntu 一般更新</td><td>4.3-14ubuntu1 → 4.3-14ubuntu1.4</td></tr>
+<tr><td>linux</td><td>未分級</td><td>1</td><td>Ubuntu 一般更新</td><td>4.4.0-210.220 → 4.4.0-210.242</td></tr>
+</table></div>
+<details><summary>逐則公告（14 則）</summary><div class="tw"><table><tr><th>安全公告</th><th>嚴重度</th><th>CVE 數</th><th>修補來源</th></tr>
+<tr><td>USN-3304-1 -- Sudo vulnerability</td><td>高</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-3534-1 -- GNU C Library vulnerabilities</td><td>高</td><td>6</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4705-1 -- Sudo vulnerabilities</td><td>高</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-3239-1 -- GNU C Library vulnerabilities</td><td>中</td><td>5</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-3294-1 -- Bash vulnerabilities</td><td>中</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-3323-1 -- GNU C Library vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-3968-1 -- Sudo vulnerabilities</td><td>中</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4154-1 -- Sudo vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4416-1 -- GNU C Library vulnerabilities</td><td>中</td><td>10</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4058-1 -- Bash vulnerability</td><td>低</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4263-1 -- Sudo vulnerability</td><td>低</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4954-1 -- GNU C Library vulnerabilities</td><td>低</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-3239-2 -- GNU C Library Regression</td><td>未分級</td><td>0</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4916-2 -- Linux kernel regression</td><td>未分級</td><td>0</td><td>Ubuntu 一般更新</td></tr>
+</table></div></details></details>
+<details><summary>要訂閱 Ubuntu Pro 才能修補：5 個套件、87 則公告</summary>
+<div class="tw"><table><tr><th>套件（原始碼套件名稱）</th><th>最高嚴重度</th><th>公告數</th><th>修補來源</th><th>已安裝 → 修補版本</th></tr>
+<tr><td>linux</td><td>重大</td><td>66</td><td>esm-infra、esm-infra-legacy</td><td>4.4.0-210.220 → 4.4.0-293.327</td></tr>
+<tr><td>sudo</td><td>高</td><td>3</td><td>esm-infra</td><td>1.8.16-0ubuntu1 → 1.8.16-0ubuntu1.10+esm3</td></tr>
+<tr><td>openssh</td><td>中</td><td>9</td><td>esm-infra、esm-infra-legacy</td><td>1:7.2p2-4ubuntu2.8 → 1:7.2p2-4ubuntu2.10+esm10</td></tr>
+<tr><td>glibc</td><td>中</td><td>8</td><td>esm-infra</td><td>2.23-0ubuntu3 → 2.23-0ubuntu11.3+esm9</td></tr>
+<tr><td>bash</td><td>低</td><td>1</td><td>esm-infra</td><td>4.3-14ubuntu1 → 4.3-14ubuntu1.4+esm1</td></tr>
+</table></div>
+<details><summary>逐則公告（87 則）</summary><div class="tw"><table><tr><th>安全公告</th><th>嚴重度</th><th>CVE 數</th><th>修補來源</th></tr>
+<tr><td>USN-7332-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>35</td><td>esm-infra</td></tr>
+<tr><td>USN-7797-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>10</td><td>esm-infra</td></tr>
+<tr><td>USN-8548-2 -- Linux kernel vulnerabilities</td><td>重大</td><td>20</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-8662-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>16</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-8725-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>8</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-8864-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>3</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-9172-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>2</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-5014-1 -- Linux kernel vulnerability</td><td>高</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-5039-1 -- Linux kernel vulnerability</td><td>高</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-5062-1 -- Linux kernel vulnerability</td><td>高</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-5211-1 -- Linux kernel vulnerability</td><td>高</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-5319-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>esm-infra</td></tr>
+<tr><td>USN-5343-1 -- Linux kernel vulnerabilities</td><td>高</td><td>30</td><td>esm-infra</td></tr>
+<tr><td>USN-5361-1 -- Linux kernel vulnerabilities</td><td>高</td><td>13</td><td>esm-infra</td></tr>
+<tr><td>USN-5413-1 -- Linux kernel vulnerabilities</td><td>高</td><td>6</td><td>esm-infra</td></tr>
+<tr><td>USN-5465-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>esm-infra</td></tr>
+<tr><td>USN-5500-1 -- Linux kernel vulnerabilities</td><td>高</td><td>8</td><td>esm-infra</td></tr>
+<tr><td>USN-5540-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>esm-infra</td></tr>
+<tr><td>USN-5557-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>esm-infra</td></tr>
+<tr><td>USN-5650-1 -- Linux kernel vulnerabilities</td><td>高</td><td>14</td><td>esm-infra</td></tr>
+<tr><td>USN-5758-1 -- Linux kernel vulnerabilities</td><td>高</td><td>13</td><td>esm-infra</td></tr>
+<tr><td>USN-5802-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>esm-infra</td></tr>
+<tr><td>USN-5926-1 -- Linux kernel vulnerabilities</td><td>高</td><td>6</td><td>esm-infra</td></tr>
+<tr><td>USN-6014-1 -- Linux kernel vulnerabilities</td><td>高</td><td>50</td><td>esm-infra</td></tr>
+<tr><td>USN-6045-1 -- Linux kernel vulnerabilities</td><td>高</td><td>5</td><td>esm-infra</td></tr>
+<tr><td>USN-6149-1 -- Linux kernel vulnerabilities</td><td>高</td><td>6</td><td>esm-infra</td></tr>
+<tr><td>USN-6221-1 -- Linux kernel vulnerabilities</td><td>高</td><td>7</td><td>esm-infra</td></tr>
+<tr><td>USN-6254-1 -- Linux kernel vulnerabilities</td><td>高</td><td>12</td><td>esm-infra</td></tr>
+<tr><td>USN-6309-1 -- Linux kernel vulnerabilities</td><td>高</td><td>6</td><td>esm-infra</td></tr>
+<tr><td>USN-6388-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>esm-infra</td></tr>
+<tr><td>USN-6439-1 -- Linux kernel vulnerabilities</td><td>高</td><td>11</td><td>esm-infra</td></tr>
+<tr><td>USN-6532-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>esm-infra</td></tr>
+<tr><td>USN-6602-1 -- Linux kernel vulnerabilities</td><td>高</td><td>5</td><td>esm-infra</td></tr>
+<tr><td>USN-6646-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-6700-1 -- Linux kernel vulnerabilities</td><td>高</td><td>7</td><td>esm-infra</td></tr>
+<tr><td>USN-6739-1 -- Linux kernel vulnerabilities</td><td>高</td><td>17</td><td>esm-infra</td></tr>
+<tr><td>USN-6778-1 -- Linux kernel vulnerabilities</td><td>高</td><td>14</td><td>esm-infra</td></tr>
+<tr><td>USN-6865-1 -- Linux kernel vulnerabilities</td><td>高</td><td>8</td><td>esm-infra</td></tr>
+<tr><td>USN-6938-1 -- Linux kernel vulnerabilities</td><td>高</td><td>31</td><td>esm-infra</td></tr>
+<tr><td>USN-6976-1 -- Linux kernel vulnerabilities</td><td>高</td><td>27</td><td>esm-infra</td></tr>
+<tr><td>USN-7039-1 -- Linux kernel vulnerabilities</td><td>高</td><td>22</td><td>esm-infra</td></tr>
+<tr><td>USN-7110-1 -- Linux kernel vulnerabilities</td><td>高</td><td>20</td><td>esm-infra</td></tr>
+<tr><td>USN-7148-1 -- Linux kernel vulnerabilities</td><td>高</td><td>40</td><td>esm-infra</td></tr>
+<tr><td>USN-7183-1 -- Linux kernel vulnerabilities</td><td>高</td><td>33</td><td>esm-infra</td></tr>
+<tr><td>USN-7262-1 -- Linux kernel vulnerabilities</td><td>高</td><td>10</td><td>esm-infra</td></tr>
+<tr><td>USN-7429-1 -- Linux kernel vulnerabilities</td><td>高</td><td>21</td><td>esm-infra</td></tr>
+<tr><td>USN-7506-1 -- Linux kernel vulnerabilities</td><td>高</td><td>32</td><td>esm-infra</td></tr>
+<tr><td>USN-7554-1 -- Linux kernel vulnerabilities</td><td>高</td><td>11</td><td>esm-infra</td></tr>
+<tr><td>USN-7604-2 -- Sudo vulnerability</td><td>高</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-7607-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>esm-infra</td></tr>
+<tr><td>USN-7684-1 -- Linux kernel vulnerabilities</td><td>高</td><td>5</td><td>esm-infra</td></tr>
+<tr><td>USN-7727-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>esm-infra</td></tr>
+<tr><td>USN-7863-1 -- Linux kernel vulnerabilities</td><td>高</td><td>10</td><td>esm-infra</td></tr>
+<tr><td>USN-7930-1 -- Linux kernel vulnerabilities</td><td>高</td><td>17</td><td>esm-infra</td></tr>
+<tr><td>USN-7987-1 -- Linux kernel vulnerabilities</td><td>高</td><td>6</td><td>esm-infra</td></tr>
+<tr><td>USN-8070-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>esm-infra</td></tr>
+<tr><td>USN-8143-1 -- Linux kernel vulnerabilities</td><td>高</td><td>7</td><td>esm-infra</td></tr>
+<tr><td>USN-8361-3 -- Linux kernel vulnerability</td><td>高</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-8923-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-8966-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-9033-1 -- Linux kernel vulnerabilities</td><td>高</td><td>19</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-5299-1 -- Linux kernel vulnerabilities</td><td>中</td><td>13</td><td>esm-infra</td></tr>
+<tr><td>USN-5310-2 -- GNU C Library vulnerabilities</td><td>中</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-5579-1 -- Linux kernel vulnerabilities</td><td>中</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-5811-2 -- Sudo vulnerability</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-6005-2 -- Sudo vulnerabilities</td><td>中</td><td>2</td><td>esm-infra</td></tr>
+<tr><td>USN-6242-2 -- OpenSSH vulnerability</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-6541-1 -- GNU C Library vulnerabilities</td><td>中</td><td>2</td><td>esm-infra</td></tr>
+<tr><td>USN-6560-2 -- OpenSSH vulnerabilities</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-6560-3 -- OpenSSH vulnerability</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-6762-1 -- GNU C Library vulnerabilities</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-6804-1 -- GNU C Library vulnerabilities</td><td>中</td><td>4</td><td>esm-infra</td></tr>
+<tr><td>USN-7259-2 -- GNU C Library vulnerability</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-7270-2 -- OpenSSH vulnerability</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-7298-1 -- Linux kernel vulnerability</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-8005-1 -- GNU C Library vulnerabilities</td><td>中</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-8274-1 -- Linux kernel vulnerabilities</td><td>中</td><td>5</td><td>esm-infra</td></tr>
+<tr><td>USN-8514-1 -- OpenSSH vulnerability</td><td>中</td><td>1</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-8577-1 -- OpenSSH vulnerability</td><td>中</td><td>1</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-8804-1 -- OpenSSH vulnerabilities</td><td>中</td><td>6</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-9163-1 -- Linux kernel vulnerability</td><td>中</td><td>1</td><td>esm-infra-legacy</td></tr>
+<tr><td>USN-5380-1 -- Bash vulnerability</td><td>低</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-5666-1 -- OpenSSH vulnerability</td><td>低</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-5699-1 -- GNU C Library vulnerabilities</td><td>低</td><td>2</td><td>esm-infra</td></tr>
+<tr><td>USN-5768-1 -- GNU C Library vulnerabilities</td><td>低</td><td>4</td><td>esm-infra</td></tr>
+<tr><td>USN-5086-1 -- Linux kernel vulnerability</td><td>未分級</td><td>0</td><td>esm-infra</td></tr>
+<tr><td>USN-6279-1 -- OpenSSH update</td><td>未分級</td><td>0</td><td>esm-infra</td></tr>
+</table></div></details></details>
+<h3>demo-web01（Ubuntu 22.04.5 LTS）</h3>
+<p>維護狀態：標準維護期內（到 2027-05）</p>
+<p class="mut">以一般使用者收集（預設）：SSH 設定、防火牆、空密碼帳號需要 sudo 才能檢查，列在「未能檢查」。</p>
+<div class="tw"><table><tr><th>類別</th><th>嚴重度</th><th>發現</th><th>說明</th><th>建議</th><th>Pro 能否解決</th></tr>
+<tr><td><span class="tag tA">A</span></td><td>中</td><td>1 個套件的安全修補，要訂閱 Ubuntu Pro 才拿得到</td><td>要更新的套件：redis。對應 2 則官方安全公告，其中重大或高風險 0 則；修補放在 esm-apps（2 則），沒有訂閱的主機用 apt 也裝不到。主機上的 Ubuntu Pro 用戶端另外回報 1 個套件待取得，可互相對照</td><td>訂閱 Ubuntu Pro，在主機上執行 sudo pro attach 註冊，再執行 sudo apt update 與 sudo apt upgrade</td><td>是</td></tr>
+<tr><td><span class="tag tB">B</span></td><td>高</td><td>已安裝新核心，但機器還在跑舊核心</td><td>執行中：5.15.0-125-generic；已安裝最新：5.15.0-130-generic。核心修補要重開機才生效</td><td>排定時段重開機（sudo reboot）；若停機困難，Ubuntu Pro 的 Livepatch 可在不重開機下套用高風險核心修補</td><td>部分</td></tr>
+<tr><td><span class="tag tC">C</span></td><td>低</td><td>未使用 CIS／DISA-STIG 基準的自動化稽核工具</td><td>沒有安裝 Ubuntu Security Guide（USG）</td><td>若需要設定基準的稽核證據，可評估 Ubuntu Pro 內含的 USG（CIS 與 DISA-STIG 設定檔）；與各單位適用的組態基準對應需另行比對</td><td>部分</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>高</td><td>5 個套件有免費的安全修補，還沒安裝</td><td>要更新的套件：linux、curl、openssl、redis、bash。對應 77 則官方安全公告，其中重大或高風險 44 則。這些修補放在 Ubuntu 一般的更新來源，不需要 Ubuntu Pro。其中包含核心更新，安裝後要重開機才生效</td><td>在主機上執行 sudo apt update 與 sudo apt upgrade；建議排定固定的修補時段，或啟用自動安全更新</td><td>否</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>中</td><td>有 12 個非 Ubuntu 官方來源的套件</td><td>第三方或來源不明的套件，不在 Ubuntu 與 Ubuntu Pro 的修補範圍</td><td>在主機上執行 pro security-status --thirdparty 與 pro security-status --unavailable 列出這些套件，盤點來源並向原廠確認更新方式</td><td>否</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>低</td><td>未啟用自動安全更新</td><td>unattended-upgrades 沒有設定為每天執行</td><td>依單位的變更管理規定決定是否啟用；要啟用時執行 sudo dpkg-reconfigure -plow unattended-upgrades</td><td>否</td></tr>
+</table></div>
+<p class="mut">未能檢查的項目（不計入上表）：SSH 設定（主機沒有安裝 SSH 服務）；主機防火牆（ufw）狀態（需要 sudo，或主機未安裝 ufw）；空密碼帳號（需要 sudo）</p>
+<details open><summary>重大與高風險公告（44 則）：只修這一則的指令</summary><p class="mut">只修重大與高風險公告時，其餘公告會累積，仍建議排時段執行 sudo apt update 與 sudo apt upgrade 全面更新。核心公告修完要重開機才生效（停機困難時可評估 Livepatch）。sudo pro fix 需要主機能連到 Canonical，或內部有 Landscape 離線（air-gapped）環境；兩種都沒有時，用 apt 那一行。「攻擊途徑」取自官方資料裡這則公告各 CVE 的 CVSS 向量，列出可及範圍最大的一種與最高分數（CVSS 3.x 與 4.0 混用）：網路＝不必先登入主機就可能被利用，對外服務的主機要優先處理；相鄰網路＝要在同一個網段；本機＝要先能登入或在主機上執行程式；實體接觸＝要能碰到機器；官方未提供＝官方資料沒附 CVSS。核心公告合併的那一列，取各則中範圍最大的途徑與最高分。這是可能的途徑，不代表一定能被利用。</p>
+<div class="tw"><table><tr><th>安全公告</th><th>嚴重度</th><th>攻擊途徑（CVSS）</th><th>套件</th><th>指令</th></tr>
+<tr><td>核心公告 40 則：USN-7166-1、USN-7387-1、USN-7510-1、USN-7909-1、USN-8096-1、USN-8493-1 等</td><td>重大</td><td>網路（最高 9.8）</td><td>linux</td><td><code>sudo apt update &amp;&amp; sudo apt upgrade，完成後重開機（sudo reboot）；停機困難時評估 Livepatch</code></td></tr>
+<tr><td>USN-6429-1 -- curl vulnerabilities</td><td>高</td><td>網路（最高 9.8）</td><td>curl</td><td><code>sudo pro fix USN-6429-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade curl libcurl4</code></td></tr>
+<tr><td>USN-7824-3 -- Redis vulnerability</td><td>高</td><td>官方未提供</td><td>redis</td><td><code>sudo pro fix USN-7824-3</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade redis-server</code></td></tr>
+<tr><td>USN-8414-1 -- OpenSSL vulnerabilities</td><td>高</td><td>網路（最高 9.1）</td><td>openssl</td><td><code>sudo pro fix USN-8414-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade openssl</code></td></tr>
+<tr><td>USN-8847-1 -- OpenSSL vulnerabilities</td><td>高</td><td>網路（最高 8.2）</td><td>openssl</td><td><code>sudo pro fix USN-8847-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade openssl</code></td></tr>
+</table></div>
+</details>
+<details open><summary>免費就能修補：5 個套件、77 則公告</summary>
+<div class="tw"><table><tr><th>套件（原始碼套件名稱）</th><th>最高嚴重度</th><th>公告數</th><th>修補來源</th><th>已安裝 → 修補版本</th></tr>
+<tr><td>linux</td><td>重大</td><td>42</td><td>Ubuntu 一般更新</td><td>5.15.0-125.135/5.15.0-130.140 → 5.15.0-204.214</td></tr>
+<tr><td>curl</td><td>高</td><td>18</td><td>Ubuntu 一般更新</td><td>7.81.0-1ubuntu1.10 → 7.81.0-1ubuntu1.30</td></tr>
+<tr><td>openssl</td><td>高</td><td>14</td><td>Ubuntu 一般更新</td><td>3.0.2-0ubuntu1.10 → 3.0.2-0ubuntu1.30</td></tr>
+<tr><td>redis</td><td>高</td><td>2</td><td>Ubuntu 一般更新</td><td>5:6.0.16-1ubuntu1 → 5:6.0.16-1ubuntu1.2</td></tr>
+<tr><td>bash</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td><td>5.1-6ubuntu1 → 5.1-6ubuntu1.1</td></tr>
+</table></div>
+<details><summary>逐則公告（77 則）</summary><div class="tw"><table><tr><th>安全公告</th><th>嚴重度</th><th>CVE 數</th><th>修補來源</th></tr>
+<tr><td>USN-7166-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>167</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7387-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>249</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7510-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>124</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7909-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>178</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8096-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>214</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8493-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>64</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8575-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>756</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8631-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>18</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8818-4 -- Linux kernel vulnerabilities</td><td>重大</td><td>20</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8875-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>950</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8961-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>1067</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-9027-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>5</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-9167-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>327</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6429-1 -- curl vulnerabilities</td><td>高</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7179-1 -- Linux kernel vulnerabilities</td><td>高</td><td>14</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7235-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7288-1 -- Linux kernel vulnerabilities</td><td>高</td><td>104</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7327-1 -- Linux kernel vulnerability</td><td>高</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7406-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7455-1 -- Linux kernel vulnerabilities</td><td>高</td><td>12</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7494-1 -- Linux kernel vulnerabilities</td><td>高</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7550-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7591-1 -- Linux kernel vulnerabilities</td><td>高</td><td>65</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7608-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7654-1 -- Linux kernel vulnerabilities</td><td>高</td><td>139</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7683-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7704-1 -- Linux kernel vulnerabilities</td><td>高</td><td>21</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7726-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7774-1 -- Linux kernel vulnerabilities</td><td>高</td><td>142</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7793-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7824-3 -- Redis vulnerability</td><td>高</td><td>0</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7862-1 -- Linux kernel vulnerability</td><td>高</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7928-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8013-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8033-1 -- Linux kernel vulnerabilities</td><td>高</td><td>113</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8060-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8159-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8180-1 -- Linux kernel vulnerabilities</td><td>高</td><td>79</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8255-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8279-1 -- Linux kernel vulnerabilities</td><td>高</td><td>11</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8388-1 -- Linux kernel vulnerabilities</td><td>高</td><td>6</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8414-1 -- OpenSSL vulnerabilities</td><td>高</td><td>10</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8658-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8847-1 -- OpenSSL vulnerabilities</td><td>高</td><td>6</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6237-1 -- curl vulnerabilities</td><td>中</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6450-1 -- OpenSSL vulnerabilities</td><td>中</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6535-1 -- curl vulnerabilities</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6697-1 -- Bash vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6718-1 -- curl vulnerabilities</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6854-1 -- OpenSSL vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6944-1 -- curl vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6986-1 -- OpenSSL vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7012-1 -- curl vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7786-1 -- OpenSSL vulnerabilities</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7829-1 -- Linux kernel vulnerabilities</td><td>中</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7980-1 -- OpenSSL vulnerabilities</td><td>中</td><td>8</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8062-1 -- curl vulnerabilities</td><td>中</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8084-1 -- curl vulnerabilities</td><td>中</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8155-1 -- OpenSSL vulnerabilities</td><td>中</td><td>6</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8227-1 -- curl vulnerabilities</td><td>中</td><td>7</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8487-1 -- curl vulnerabilities</td><td>中</td><td>6</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8651-1 -- curl vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8678-1 -- OpenSSL vulnerabilities</td><td>中</td><td>5</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8730-1 -- Linux kernel vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8820-1 -- curl vulnerabilities</td><td>中</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8866-1 -- Redis vulnerabilities</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8932-1 -- curl vulnerabilities</td><td>中</td><td>8</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6622-1 -- OpenSSL vulnerabilities</td><td>低</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6937-1 -- OpenSSL vulnerabilities</td><td>低</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7104-1 -- curl vulnerability</td><td>低</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7162-1 -- curl vulnerability</td><td>低</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7278-1 -- OpenSSL vulnerabilities</td><td>低</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8670-2 -- curl vulnerability</td><td>低</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5495-2 -- curl regression</td><td>未分級</td><td>0</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6237-2 -- curl regression</td><td>未分級</td><td>0</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6663-1 -- OpenSSL update</td><td>未分級</td><td>0</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-8625-1 -- OpenSSL vulnerability</td><td>未分級</td><td>0</td><td>Ubuntu 一般更新</td></tr>
+</table></div></details></details>
+<details><summary>要訂閱 Ubuntu Pro 才能修補：1 個套件、2 則公告</summary>
+<div class="tw"><table><tr><th>套件（原始碼套件名稱）</th><th>最高嚴重度</th><th>公告數</th><th>修補來源</th><th>已安裝 → 修補版本</th></tr>
+<tr><td>redis</td><td>中</td><td>2</td><td>esm-apps</td><td>5:6.0.16-1ubuntu1 → 5:6.0.16-1ubuntu1+esm2</td></tr>
+</table></div>
+<details><summary>逐則公告（2 則）</summary><div class="tw"><table><tr><th>安全公告</th><th>嚴重度</th><th>CVE 數</th><th>修補來源</th></tr>
+<tr><td>USN-6531-1 -- Redis vulnerabilities</td><td>中</td><td>6</td><td>esm-apps</td></tr>
+<tr><td>USN-7321-1 -- Redis vulnerabilities</td><td>中</td><td>2</td><td>esm-apps</td></tr>
+</table></div></details></details>
+<h3>demo-ap01（Ubuntu 20.04.6 LTS）</h3>
+<p>維護狀態：標準維護已於 2025-05 結束；訂閱 Ubuntu Pro（ESM）才有安全更新，到 2030-05</p>
+<div class="tw"><table><tr><th>類別</th><th>嚴重度</th><th>發現</th><th>說明</th><th>建議</th><th>Pro 能否解決</th></tr>
+<tr><td><span class="tag tA">A</span></td><td>高</td><td>作業系統已過標準維護期</td><td>標準維護已於 2025-05 結束；訂閱 Ubuntu Pro（ESM）才有安全更新，到 2030-05</td><td>訂閱 Ubuntu Pro 並啟用 esm-infra，即可繼續取得安全更新；同時規劃升級時程</td><td>是</td></tr>
+<tr><td><span class="tag tA">A</span></td><td>高</td><td>5 個套件的安全修補，要訂閱 Ubuntu Pro 才拿得到</td><td>要更新的套件：linux、openssl、nginx、sudo、imagemagick。對應 52 則官方安全公告，其中重大或高風險 27 則；修補放在 esm-apps（18 則）、esm-infra（34 則），沒有訂閱的主機用 apt 也裝不到。其中包含核心更新，安裝後要重開機才生效。主機上的 Ubuntu Pro 用戶端另外回報 5 個套件待取得，可互相對照</td><td>訂閱 Ubuntu Pro，在主機上執行 sudo pro attach 註冊，再執行 sudo apt update 與 sudo apt upgrade</td><td>是</td></tr>
+<tr><td><span class="tag tB">B</span></td><td>高</td><td>已安裝新核心，但機器還在跑舊核心</td><td>執行中：5.4.0-150-generic；已安裝最新：5.4.0-169-generic。核心修補要重開機才生效</td><td>排定時段重開機（sudo reboot）；若停機困難，Ubuntu Pro 的 Livepatch 可在不重開機下套用高風險核心修補</td><td>部分</td></tr>
+<tr><td><span class="tag tB">B</span></td><td>中</td><td>已連續運作 200 天沒有重開機</td><td>長時間不重開機，核心修補很可能沒有生效</td><td>確認停機限制；Ubuntu Pro 的 Livepatch 只處理高風險與重大核心漏洞，不能取代所有重開機</td><td>部分</td></tr>
+<tr><td><span class="tag tC">C</span></td><td>低</td><td>未使用 CIS／DISA-STIG 基準的自動化稽核工具</td><td>沒有安裝 Ubuntu Security Guide（USG）</td><td>若需要設定基準的稽核證據，可評估 Ubuntu Pro 內含的 USG（CIS 與 DISA-STIG 設定檔）；與各單位適用的組態基準對應需另行比對</td><td>部分</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>高</td><td>6 個套件有免費的安全修補，還沒安裝</td><td>要更新的套件：linux、openssl、sudo、imagemagick、nginx、bash。對應 74 則官方安全公告，其中重大或高風險 43 則。這些修補放在 Ubuntu 一般的更新來源，不需要 Ubuntu Pro。其中包含核心更新，安裝後要重開機才生效</td><td>在主機上執行 sudo apt update 與 sudo apt upgrade；建議排定固定的修補時段，或啟用自動安全更新</td><td>否</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>高</td><td>SSH 允許 root 直接登入</td><td>SSH 設定 PermitRootLogin 為 yes</td><td>在 /etc/ssh/sshd_config（或 /etc/ssh/sshd_config.d/ 裡的設定檔）把 PermitRootLogin 改為 no，再執行 sudo systemctl reload ssh</td><td>否</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>中</td><td>SSH 允許密碼登入</td><td>SSH 設定 PasswordAuthentication 為 yes，帳號可能被猜密碼</td><td>先確認每位管理者都能用金鑰登入，再把 PasswordAuthentication 改為 no，執行 sudo systemctl reload ssh</td><td>否</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>中</td><td>主機防火牆（ufw）未啟用</td><td>ufw 狀態為 inactive</td><td>先確認是否已由網路層防火牆保護。要啟用時，先執行 sudo ufw allow OpenSSH 保留遠端登入，再執行 sudo ufw enable</td><td>否</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>中</td><td>有 3 個非 Ubuntu 官方來源的套件</td><td>第三方或來源不明的套件，不在 Ubuntu 與 Ubuntu Pro 的修補範圍</td><td>在主機上執行 pro security-status --thirdparty 與 pro security-status --unavailable 列出這些套件，盤點來源並向原廠確認更新方式</td><td>否</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>低</td><td>未啟用自動安全更新</td><td>unattended-upgrades 沒有設定為每天執行</td><td>依單位的變更管理規定決定是否啟用；要啟用時執行 sudo dpkg-reconfigure -plow unattended-upgrades</td><td>否</td></tr>
+</table></div>
+<details><summary>重大與高風險公告（70 則）：只修這一則的指令</summary><p class="mut">只修重大與高風險公告時，其餘公告會累積，仍建議排時段執行 sudo apt update 與 sudo apt upgrade 全面更新。核心公告修完要重開機才生效（停機困難時可評估 Livepatch）。sudo pro fix 需要主機能連到 Canonical，或內部有 Landscape 離線（air-gapped）環境；兩種都沒有時，用 apt 那一行。「攻擊途徑」取自官方資料裡這則公告各 CVE 的 CVSS 向量，列出可及範圍最大的一種與最高分數（CVSS 3.x 與 4.0 混用）：網路＝不必先登入主機就可能被利用，對外服務的主機要優先處理；相鄰網路＝要在同一個網段；本機＝要先能登入或在主機上執行程式；實體接觸＝要能碰到機器；官方未提供＝官方資料沒附 CVSS。核心公告合併的那一列，取各則中範圍最大的途徑與最高分。這是可能的途徑，不代表一定能被利用。</p>
+<div class="tw"><table><tr><th>安全公告</th><th>嚴重度</th><th>攻擊途徑（CVSS）</th><th>套件</th><th>指令</th></tr>
+<tr><td>核心公告 59 則：USN-7795-1、USN-8615-1、USN-8666-1、USN-8851-1、USN-8919-1、USN-9030-1 等</td><td>重大</td><td>網路（最高 10.0）</td><td>linux</td><td>其中 22 則要先訂閱 Ubuntu Pro（sudo pro attach）才能取得，其餘免費：<br><code>sudo apt update &amp;&amp; sudo apt upgrade，完成後重開機（sudo reboot）；停機困難時評估 Livepatch</code></td></tr>
+<tr><td>USN-7604-2 -- Sudo vulnerability</td><td>高</td><td>本機（最高 2.8）</td><td>sudo</td><td>要先訂閱 Ubuntu Pro 並執行 sudo pro attach；之後：<br><code>sudo pro fix USN-7604-2</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade sudo</code></td></tr>
+<tr><td>USN-8375-1 -- nginx vulnerabilities</td><td>高</td><td>網路（最高 8.2）</td><td>nginx</td><td>要先訂閱 Ubuntu Pro 並執行 sudo pro attach；之後：<br><code>sudo pro fix USN-8375-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade nginx nginx-core</code></td></tr>
+<tr><td>USN-8414-2 -- OpenSSL vulnerabilities</td><td>高</td><td>網路（最高 8.8）</td><td>openssl</td><td>要先訂閱 Ubuntu Pro 並執行 sudo pro attach；之後：<br><code>sudo pro fix USN-8414-2</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade libssl1.1 openssl</code></td></tr>
+<tr><td>USN-8847-2 -- OpenSSL vulnerabilities</td><td>高</td><td>網路（最高 8.2）</td><td>openssl</td><td>要先訂閱 Ubuntu Pro 並執行 sudo pro attach；之後：<br><code>sudo pro fix USN-8847-2</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade libssl1.1 openssl</code></td></tr>
+<tr><td>USN-9159-1 -- nginx vulnerabilities</td><td>高</td><td>網路（最高 8.1）</td><td>nginx</td><td>要先訂閱 Ubuntu Pro 並執行 sudo pro attach；之後：<br><code>sudo pro fix USN-9159-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade nginx nginx-core</code></td></tr>
+<tr><td>USN-4662-1 -- OpenSSL vulnerability</td><td>高</td><td>網路（最高 5.9）</td><td>openssl</td><td><code>sudo pro fix USN-4662-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade libssl1.1 openssl</code></td></tr>
+<tr><td>USN-4705-1 -- Sudo vulnerabilities</td><td>高</td><td>本機（最高 7.8）</td><td>sudo</td><td><code>sudo pro fix USN-4705-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade sudo</code></td></tr>
+<tr><td>USN-4891-1 -- OpenSSL vulnerability</td><td>高</td><td>網路（最高 5.9）</td><td>openssl</td><td><code>sudo pro fix USN-4891-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade libssl1.1 openssl</code></td></tr>
+<tr><td>USN-5051-1 -- OpenSSL vulnerabilities</td><td>高</td><td>網路（最高 9.8）</td><td>openssl</td><td><code>sudo pro fix USN-5051-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade libssl1.1 openssl</code></td></tr>
+<tr><td>USN-5328-1 -- OpenSSL vulnerability</td><td>高</td><td>網路（最高 7.5）</td><td>openssl</td><td><code>sudo pro fix USN-5328-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade libssl1.1 openssl</code></td></tr>
+<tr><td>USN-5844-1 -- OpenSSL vulnerabilities</td><td>高</td><td>網路（最高 7.5）</td><td>openssl</td><td><code>sudo pro fix USN-5844-1</code><br><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade libssl1.1 openssl</code></td></tr>
+</table></div>
+</details>
+<details open><summary>免費就能修補：6 個套件、74 則公告</summary>
+<div class="tw"><table><tr><th>套件（原始碼套件名稱）</th><th>最高嚴重度</th><th>公告數</th><th>修補來源</th><th>已安裝 → 修補版本</th></tr>
+<tr><td>linux</td><td>重大</td><td>41</td><td>Ubuntu 一般更新</td><td>5.4.0-150.160/5.4.0-169.179 → 5.4.0-216.236</td></tr>
+<tr><td>openssl</td><td>高</td><td>16</td><td>Ubuntu 一般更新</td><td>1.1.1f-1ubuntu2 → 1.1.1f-1ubuntu2.24</td></tr>
+<tr><td>sudo</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td><td>1.8.31-1ubuntu1 → 1.8.31-1ubuntu1.5</td></tr>
+<tr><td>imagemagick</td><td>中</td><td>8</td><td>Ubuntu 一般更新</td><td>8:6.9.10.23+dfsg-2.1ubuntu11 → 8:6.9.10.23+dfsg-2.1ubuntu11.11</td></tr>
+<tr><td>nginx</td><td>中</td><td>5</td><td>Ubuntu 一般更新</td><td>1.18.0-0ubuntu1 → 1.18.0-0ubuntu1.7</td></tr>
+<tr><td>bash</td><td>低</td><td>1</td><td>Ubuntu 一般更新</td><td>5.0-6ubuntu1 → 5.0-6ubuntu1.2</td></tr>
+</table></div>
+<details><summary>逐則公告（74 則）</summary><div class="tw"><table><tr><th>安全公告</th><th>嚴重度</th><th>CVE 數</th><th>修補來源</th></tr>
+<tr><td>USN-6548-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>9</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6951-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>83</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7293-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>143</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4662-1 -- OpenSSL vulnerability</td><td>高</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4705-1 -- Sudo vulnerabilities</td><td>高</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4891-1 -- OpenSSL vulnerability</td><td>高</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5051-1 -- OpenSSL vulnerabilities</td><td>高</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5328-1 -- OpenSSL vulnerability</td><td>高</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5844-1 -- OpenSSL vulnerabilities</td><td>高</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6131-1 -- Linux kernel vulnerabilities</td><td>高</td><td>5</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6193-1 -- Linux kernel vulnerabilities</td><td>高</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6251-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6284-1 -- Linux kernel vulnerabilities</td><td>高</td><td>16</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6317-1 -- Linux kernel vulnerabilities</td><td>高</td><td>5</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6340-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6387-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6417-1 -- Linux kernel vulnerabilities</td><td>高</td><td>6</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6441-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6605-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6625-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6648-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6681-1 -- Linux kernel vulnerabilities</td><td>高</td><td>8</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6702-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6726-1 -- Linux kernel vulnerabilities</td><td>高</td><td>23</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6741-1 -- Linux kernel vulnerabilities</td><td>高</td><td>5</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6767-1 -- Linux kernel vulnerabilities</td><td>高</td><td>47</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6831-1 -- Linux kernel vulnerabilities</td><td>高</td><td>41</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6868-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6896-1 -- Linux kernel vulnerabilities</td><td>高</td><td>147</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6924-1 -- Linux kernel vulnerabilities</td><td>高</td><td>7</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6973-1 -- Linux kernel vulnerabilities</td><td>高</td><td>9</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7003-1 -- Linux kernel vulnerabilities</td><td>高</td><td>85</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7022-1 -- Linux kernel vulnerabilities</td><td>高</td><td>10</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7073-1 -- Linux kernel vulnerabilities</td><td>高</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7088-1 -- Linux kernel vulnerabilities</td><td>高</td><td>162</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7159-1 -- Linux kernel vulnerabilities</td><td>高</td><td>23</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7173-1 -- Linux kernel vulnerabilities</td><td>高</td><td>16</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7234-1 -- Linux kernel vulnerabilities</td><td>高</td><td>5</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7391-1 -- Linux kernel vulnerabilities</td><td>高</td><td>152</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7408-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7461-1 -- Linux kernel vulnerabilities</td><td>高</td><td>11</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7495-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7516-1 -- Linux kernel vulnerabilities</td><td>高</td><td>89</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4738-1 -- OpenSSL vulnerabilities</td><td>中</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4967-1 -- nginx vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4988-1 -- ImageMagick vulnerabilities</td><td>中</td><td>33</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5371-1 -- nginx vulnerabilities</td><td>中</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5402-1 -- OpenSSL vulnerabilities</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5488-1 -- OpenSSL vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5502-1 -- OpenSSL vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5722-1 -- nginx vulnerabilities</td><td>中</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5811-1 -- Sudo vulnerabilities</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5855-2 -- ImageMagick vulnerabilities</td><td>中</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6005-1 -- Sudo vulnerabilities</td><td>中</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6119-1 -- OpenSSL vulnerabilities</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6172-1 -- Linux kernel vulnerabilities</td><td>中</td><td>8</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6200-1 -- ImageMagick vulnerabilities</td><td>中</td><td>14</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6200-2 -- ImageMagick vulnerabilities</td><td>中</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6462-1 -- Linux kernel vulnerabilities</td><td>中</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6495-1 -- Linux kernel vulnerabilities</td><td>中</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6776-1 -- Linux kernel vulnerabilities</td><td>中</td><td>4</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7014-1 -- nginx vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7285-1 -- nginx vulnerability</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7440-1 -- ImageMagick regression</td><td>中</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4549-1 -- ImageMagick vulnerabilities</td><td>低</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-4670-1 -- ImageMagick vulnerabilities</td><td>低</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5380-1 -- Bash vulnerability</td><td>低</td><td>1</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6039-1 -- OpenSSL vulnerabilities</td><td>低</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6435-2 -- OpenSSL vulnerabilities</td><td>低</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6622-1 -- OpenSSL vulnerabilities</td><td>低</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6937-1 -- OpenSSL vulnerabilities</td><td>低</td><td>3</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-7278-1 -- OpenSSL vulnerabilities</td><td>低</td><td>2</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-5855-3 -- ImageMagick regression</td><td>未分級</td><td>0</td><td>Ubuntu 一般更新</td></tr>
+<tr><td>USN-6663-1 -- OpenSSL update</td><td>未分級</td><td>0</td><td>Ubuntu 一般更新</td></tr>
+</table></div></details></details>
+<details><summary>要訂閱 Ubuntu Pro 才能修補：5 個套件、52 則公告</summary>
+<div class="tw"><table><tr><th>套件（原始碼套件名稱）</th><th>最高嚴重度</th><th>公告數</th><th>修補來源</th><th>已安裝 → 修補版本</th></tr>
+<tr><td>linux</td><td>重大</td><td>22</td><td>esm-infra</td><td>5.4.0-150.160/5.4.0-169.179 → 5.4.0-247.267</td></tr>
+<tr><td>openssl</td><td>高</td><td>6</td><td>esm-infra</td><td>1.1.1f-1ubuntu2 → 1.1.1f-1ubuntu2.24+esm6</td></tr>
+<tr><td>nginx</td><td>高</td><td>4</td><td>esm-infra</td><td>1.18.0-0ubuntu1 → 1.18.0-0ubuntu1.7+esm5</td></tr>
+<tr><td>sudo</td><td>高</td><td>2</td><td>esm-infra</td><td>1.8.31-1ubuntu1 → 1.8.31-1ubuntu1.5+esm2</td></tr>
+<tr><td>imagemagick</td><td>中</td><td>18</td><td>esm-apps</td><td>8:6.9.10.23+dfsg-2.1ubuntu11 → 8:6.9.10.23+dfsg-2.1ubuntu11.11+esm16</td></tr>
+</table></div>
+<details><summary>逐則公告（52 則）</summary><div class="tw"><table><tr><th>安全公告</th><th>嚴重度</th><th>CVE 數</th><th>修補來源</th></tr>
+<tr><td>USN-7795-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>5</td><td>esm-infra</td></tr>
+<tr><td>USN-8615-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>23</td><td>esm-infra</td></tr>
+<tr><td>USN-8666-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>32</td><td>esm-infra</td></tr>
+<tr><td>USN-8851-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-8919-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>9</td><td>esm-infra</td></tr>
+<tr><td>USN-9030-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>6</td><td>esm-infra</td></tr>
+<tr><td>USN-9170-1 -- Linux kernel vulnerabilities</td><td>重大</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-7585-1 -- Linux kernel vulnerabilities</td><td>高</td><td>31</td><td>esm-infra</td></tr>
+<tr><td>USN-7604-2 -- Sudo vulnerability</td><td>高</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-7671-1 -- Linux kernel vulnerabilities</td><td>高</td><td>11</td><td>esm-infra</td></tr>
+<tr><td>USN-7701-1 -- Linux kernel vulnerabilities</td><td>高</td><td>7</td><td>esm-infra</td></tr>
+<tr><td>USN-7754-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>esm-infra</td></tr>
+<tr><td>USN-7874-1 -- Linux kernel vulnerabilities</td><td>高</td><td>8</td><td>esm-infra</td></tr>
+<tr><td>USN-7922-1 -- Linux kernel vulnerabilities</td><td>高</td><td>15</td><td>esm-infra</td></tr>
+<tr><td>USN-7990-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-8098-1 -- Linux kernel vulnerabilities</td><td>高</td><td>8</td><td>esm-infra</td></tr>
+<tr><td>USN-8200-1 -- Linux kernel vulnerabilities</td><td>高</td><td>5</td><td>esm-infra</td></tr>
+<tr><td>USN-8273-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-8280-1 -- Linux kernel vulnerabilities</td><td>高</td><td>6</td><td>esm-infra</td></tr>
+<tr><td>USN-8375-1 -- nginx vulnerabilities</td><td>高</td><td>12</td><td>esm-infra</td></tr>
+<tr><td>USN-8389-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-8414-2 -- OpenSSL vulnerabilities</td><td>高</td><td>5</td><td>esm-infra</td></tr>
+<tr><td>USN-8714-1 -- Linux kernel vulnerabilities</td><td>高</td><td>5</td><td>esm-infra</td></tr>
+<tr><td>USN-8847-2 -- OpenSSL vulnerabilities</td><td>高</td><td>4</td><td>esm-infra</td></tr>
+<tr><td>USN-8964-1 -- Linux kernel vulnerabilities</td><td>高</td><td>2</td><td>esm-infra</td></tr>
+<tr><td>USN-9159-1 -- nginx vulnerabilities</td><td>高</td><td>4</td><td>esm-infra</td></tr>
+<tr><td>USN-9161-1 -- Linux kernel vulnerabilities</td><td>高</td><td>3</td><td>esm-infra</td></tr>
+<tr><td>USN-5736-2 -- ImageMagick vulnerabilities</td><td>中</td><td>1</td><td>esm-apps</td></tr>
+<tr><td>USN-6621-1 -- ImageMagick vulnerability</td><td>中</td><td>1</td><td>esm-apps</td></tr>
+<tr><td>USN-7728-1 -- ImageMagick vulnerabilities</td><td>中</td><td>3</td><td>esm-apps</td></tr>
+<tr><td>USN-7756-1 -- ImageMagick vulnerabilities</td><td>中</td><td>3</td><td>esm-apps</td></tr>
+<tr><td>USN-7786-1 -- OpenSSL vulnerabilities</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-7812-1 -- ImageMagick vulnerabilities</td><td>中</td><td>2</td><td>esm-apps</td></tr>
+<tr><td>USN-7876-1 -- ImageMagick vulnerabilities</td><td>中</td><td>1</td><td>esm-apps</td></tr>
+<tr><td>USN-7980-2 -- OpenSSL vulnerabilities</td><td>中</td><td>7</td><td>esm-infra</td></tr>
+<tr><td>USN-8007-1 -- ImageMagick vulnerabilities</td><td>中</td><td>3</td><td>esm-apps</td></tr>
+<tr><td>USN-8021-1 -- ImageMagick vulnerability</td><td>中</td><td>1</td><td>esm-apps</td></tr>
+<tr><td>USN-8069-1 -- ImageMagick vulnerabilities</td><td>中</td><td>7</td><td>esm-apps</td></tr>
+<tr><td>USN-8127-1 -- ImageMagick vulnerabilities</td><td>中</td><td>10</td><td>esm-apps</td></tr>
+<tr><td>USN-8263-1 -- ImageMagick vulnerabilities</td><td>中</td><td>7</td><td>esm-apps</td></tr>
+<tr><td>USN-8398-4 -- nginx vulnerability</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-8468-1 -- ImageMagick vulnerabilities</td><td>中</td><td>6</td><td>esm-apps</td></tr>
+<tr><td>USN-8558-1 -- ImageMagick vulnerabilities</td><td>中</td><td>4</td><td>esm-apps</td></tr>
+<tr><td>USN-8592-1 -- ImageMagick vulnerabilities</td><td>中</td><td>4</td><td>esm-apps</td></tr>
+<tr><td>USN-8678-2 -- OpenSSL, OpenSSL 1.0 vulnerabilities</td><td>中</td><td>2</td><td>esm-infra</td></tr>
+<tr><td>USN-8739-1 -- ImageMagick vulnerabilities</td><td>中</td><td>13</td><td>esm-apps</td></tr>
+<tr><td>USN-8810-1 -- ImageMagick vulnerabilities</td><td>中</td><td>6</td><td>esm-apps</td></tr>
+<tr><td>USN-8859-1 -- ImageMagick vulnerabilities</td><td>中</td><td>5</td><td>esm-apps</td></tr>
+<tr><td>USN-8895-2 -- Sudo vulnerability</td><td>中</td><td>1</td><td>esm-infra</td></tr>
+<tr><td>USN-8955-2 -- nginx vulnerabilities</td><td>中</td><td>4</td><td>esm-infra</td></tr>
+<tr><td>USN-6393-1 -- ImageMagick vulnerability</td><td>低</td><td>1</td><td>esm-apps</td></tr>
+<tr><td>USN-8155-2 -- OpenSSL vulnerabilities</td><td>低</td><td>4</td><td>esm-infra</td></tr>
+</table></div></details></details>
+<h2>四、建議處理順序</h2><ol><li>當天就能改、不用採購的高風險設定（demo-ap01）：SSH 允許 root 直接登入。</li><li>安裝已經可以取得的安全修補（demo-db01、demo-web01、demo-ap01）：在主機上執行 sudo apt update 與 sudo apt upgrade；含核心更新的要排時段重開機。只想先修重大與高風險時，見各主機的「重大與高風險公告」。</li><li>要訂閱 Ubuntu Pro 才拿得到修補的主機（demo-db01、demo-web01、demo-ap01）：評估訂閱 Ubuntu Pro 取得這些修補；已過標準維護期的主機，同時排定升級計畫。</li><li>修補要重開機才生效的主機（demo-db01、demo-web01、demo-ap01）：排定重開機時段；停機困難的，評估 Livepatch（只處理高風險與重大核心漏洞，不能取代所有重開機）。</li><li>其他設定與管理項目（demo-db01、demo-web01、demo-ap01）：SSH 允許密碼登入、未啟用自動安全更新、非 Ubuntu 官方來源的套件、主機防火牆（ufw）未啟用，依各項的建議排入例行維護。</li><li>需要設定基準的稽核證據時（demo-web01、demo-ap01）：評估 Ubuntu Pro 內含的 USG，並與適用的組態基準比對。</li><li>有項目未能檢查（demo-web01）：收集時權限不足或缺資料，不代表沒有問題；可加 --sudo 重新收集，或依各主機的說明補資料。</li></ol>
+<h2>五、檢查範圍與限制</h2><ul><li>本健檢只讀取系統資訊，不做弱點利用測試、不修改設定，不等同滲透測試。</li><li>只涵蓋 Ubuntu 官方套件庫的套件；第三方軟體（例如自行安裝的應用程式）的弱點不在比對範圍。</li><li>官方弱點資料以「已安裝的套件版本」比對：舊核心套件若仍留在系統上，也可能被列入；實際執行中的核心請看 B 類。</li><li>建議欄的指令是一般做法，執行前請依單位的變更管理規定評估，並先在測試環境確認。</li><li>標示「未能檢查」的項目，代表收集時權限不足或主機沒有對應工具，不代表沒有問題。</li><li>結果反映收集當下的狀態，以及報告上所列官方資料日期之前公布的弱點。</li></ul>
+<h2>附錄：資料來源</h2>
+<p>比對引擎：內建比對（依官方 OVAL 的同一套判斷條件實作）</p>
+<div class="tw"><table><tr><th>版本</th><th>檔案</th><th>官方產生時間</th><th>距分析日</th><th>SHA-256（前 16 碼）</th><th>與下載紀錄</th></tr>
+<tr><td>focal（20.04）</td><td>oci.com.ubuntu.focal.usn.oval.xml.bz2</td><td>2026-11-19T19:12:11</td><td>2 天</td><td>82081b22507b156b</td><td>一致</td></tr>
+<tr><td>jammy（22.04）</td><td>oci.com.ubuntu.jammy.usn.oval.xml.bz2</td><td>2026-11-19T19:11:32</td><td>2 天</td><td>31a6fe092e8e39a2</td><td>一致</td></tr>
+<tr><td>xenial（16.04）</td><td>oci.com.ubuntu.xenial.usn.oval.xml.bz2</td><td>2026-11-19T19:13:13</td><td>2 天</td><td>1090773a71da18e0</td><td>一致</td></tr>
+</table></div><p class="mut">弱點資料：Canonical 官方 OVAL（security-metadata.canonical.com），授權 CC BY-SA 4.0。</p>
+<script>window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=true;});});</script>
+</main></body></html>

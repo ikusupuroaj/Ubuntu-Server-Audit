@@ -1,0 +1,90 @@
+# 每天從 Canonical 官方網站下載 OVAL 弱點資料，更新到兩個地方：
+#   1. data 分支：只保留最新一份（每次覆蓋，不累積歷史）。git clone 時會一起下載，
+#      hc 第一次執行時自動放進 data/，所以下載後馬上就有一份可用的資料。
+#   2. Releases 的 data-latest：完整壓縮檔（工具＋最新資料）。
+#      0.7.0 起不再打包 skill；Releases 上舊的 skill 壓縮檔先保留，0.8 時再刪除。
+# 官方資料下載或內容檢查失敗時整個流程停止，不會蓋掉前一天的資料。
+name: 每日更新官方弱點資料
+
+on:
+  schedule:
+    - cron: "17 3 * * *"   # 每天 UTC 03:17（台灣時間 11:17）
+  workflow_dispatch: {}      # 也可以在 Actions 頁面手動執行
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 取出程式
+        uses: actions/checkout@v6
+
+      - name: 從 Canonical 官方網站下載並檢查
+        run: python3 update-data.py --dest data-out
+
+      - name: 更新 data 分支（只保留最新一份）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          git fetch --no-tags origin "+refs/heads/data:refs/remotes/origin/data" 2>/dev/null || true
+          if git show origin/data:SHA256SUMS > /tmp/old-sums 2>/dev/null && cmp -s /tmp/old-sums data-out/SHA256SUMS; then
+            echo "官方資料沒有變動，data 分支不更新"
+            exit 0
+          fi
+          # 在另一個資料夾建 git，免得 data-out 裡多出 .git，被包進完整壓縮檔
+          BR="$RUNNER_TEMP/data-branch"
+          rm -rf "$BR"; cp -r data-out "$BR"
+          cp .github/data-branch-README.md "$BR/README.md"
+          cd "$BR"
+          git init -q
+          git checkout -q -b data
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "官方弱點資料 $(date -u +%Y-%m-%d)"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
+          echo "data 分支已更新"
+
+      - name: 打包完整壓縮檔，更新 Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          cp .github/data-branch-README.md data-out/README.md
+          mkdir -p build
+          git archive --format=tar --prefix=Ubuntu-Server-Audit/ HEAD | tar -x -C build
+          rm -rf build/Ubuntu-Server-Audit/data
+          cp -r data-out build/Ubuntu-Server-Audit/data
+          (cd build && zip -qr ../Ubuntu-Server-Audit-full.zip Ubuntu-Server-Audit)
+          NOTES="每天自動更新。完整壓縮檔＝工具＋最新官方弱點資料，解壓後即可在離線環境使用。
+          官方資料產生時間：
+          $(python3 update-data.py --dest data-out --list)
+          官方 OVAL 資料的著作權屬於 Canonical Ltd.，授權 CC BY-SA 4.0，檔案未經修改。"
+          if ! gh release view data-latest >/dev/null 2>&1; then
+            gh release create data-latest --title "每日更新：工具＋官方弱點資料" --notes "$NOTES"
+          else
+            gh release edit data-latest --notes "$NOTES"
+          fi
+          gh release upload data-latest Ubuntu-Server-Audit-full.zip --clobber
+
+      - name: 保持排程運作的提交（每月 1 日與 15 日）
+        # GitHub 會在公開專案 60 天沒有活動時自動停用排程，每月兩次在主分支更新一個小檔案避免停用。
+        # 用 always()：前面的下載失敗時也照樣執行，免得連續失敗導致排程被停用。
+        if: always() && github.event_name == 'schedule'
+        run: |
+          set -e
+          case "$(date -u +%d)" in 01|15) ;; *) exit 0 ;; esac
+          git pull -q --rebase origin "${GITHUB_REF_NAME}" || true
+          mkdir -p .github
+          date -u +%Y-%m-%dT%H:%M:%SZ > .github/last-keepalive.txt
+          git add .github/last-keepalive.txt
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "排程保持運作（每月一次）"
+          git push -q

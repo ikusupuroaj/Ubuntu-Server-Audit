@@ -1,0 +1,201 @@
+{
+  "schema": "offline-ubuntu-healthcheck/rules-1",
+  "_說明": "預設判讀規則。不要直接改這個檔：複製一份（例如 my-rules.json），只留下要改的欄位，執行 analyze.py 時加 --rules my-rules.json，程式會覆蓋在預設值上。說明見 docs/custom-rules.md。",
+
+  "lifecycle_source": "https://ubuntu.com/about/release-cycle（2026-11-16 查證）",
+  "lifecycle": {
+    "14.04": {"codename": "trusty",   "standard_end": "2019-04", "esm_end": "2024-05", "legacy_end": "2029-05"},
+    "16.04": {"codename": "xenial",   "standard_end": "2021-04", "esm_end": "2026-05", "legacy_end": "2031-05"},
+    "18.04": {"codename": "bionic",   "standard_end": "2023-05", "esm_end": "2028-05", "legacy_end": "2033-05"},
+    "20.04": {"codename": "focal",    "standard_end": "2025-05", "esm_end": "2030-05", "legacy_end": "2035-05"},
+    "22.04": {"codename": "jammy",    "standard_end": "2027-05", "esm_end": "2032-05", "legacy_end": "2037-05"},
+    "24.04": {"codename": "noble",    "standard_end": "2029-05", "esm_end": "2034-05", "legacy_end": "2039-05"},
+    "26.04": {"codename": "resolute", "standard_end": "2031-05", "esm_end": "2036-05", "legacy_end": "2041-05"}
+  },
+
+  "categories": {
+    "A": {"name": "修補取不到（訂閱 Ubuntu Pro 可解決）", "pro_helps": "是"},
+    "B": {"name": "修補需要停機（Ubuntu Pro 的 Livepatch 可降低）", "pro_helps": "部分"},
+    "C": {"name": "合規與設定基準（Ubuntu Pro 提供工具，仍需人力）", "pro_helps": "部分"},
+    "D": {"name": "與 Ubuntu Pro 無關（自行處理、升級或其他服務）", "pro_helps": "否"}
+  },
+
+  "thresholds": {
+    "uptime_days_warn": 90,
+    "data_max_age_days": 7,
+    "apt_update_stale_days": 7,
+    "auto_update_lag_days": 7,
+    "detail_rows_per_host": 30
+  },
+
+  "usg_versions": ["20.04", "22.04", "24.04"],
+
+  "severity_names": {
+    "Critical": "重大", "High": "高", "Medium": "中", "Low": "低", "Negligible": "可忽略", "None": "未分級"
+  },
+
+  "findings": {
+    "os_esm_period": {
+      "enabled": true, "category": "A", "severity": "高",
+      "title": "作業系統已過標準維護期",
+      "action": "訂閱 Ubuntu Pro 並啟用 esm-infra，即可繼續取得安全更新；同時規劃升級時程"
+    },
+    "os_legacy_period": {
+      "enabled": true, "category": "A", "severity": "高",
+      "title": "作業系統已過 ESM 期限",
+      "action": "需要 Ubuntu Pro 加上 Legacy 加購；建議同步規劃升級，Legacy 適合當作遷移期的過渡"
+    },
+    "os_no_support": {
+      "enabled": true, "category": "D", "severity": "高",
+      "title": "作業系統已無官方安全維護",
+      "action": "規劃升級到仍在維護期內的 LTS 版本"
+    },
+    "oval_needs_pro": {
+      "enabled": true, "category": "A", "severity": "auto",
+      "title": "{n_packages} 個套件的安全修補，要訂閱 Ubuntu Pro 才拿得到",
+      "detail": "要更新的套件：{packages}。對應 {usns} 則官方安全公告，其中重大或高風險 {crit_high} 則；修補放在 {pockets}，沒有訂閱的主機用 apt 也裝不到{reboot_note}",
+      "action": "訂閱 Ubuntu Pro，在主機上執行 sudo pro attach 註冊，再執行 sudo apt update 與 sudo apt upgrade"
+    },
+    "oval_pro_not_applied": {
+      "enabled": true, "category": "D", "severity": "auto",
+      "title": "已訂閱 Ubuntu Pro，但有 {n_packages} 個套件的安全修補還沒安裝",
+      "detail": "要更新的套件：{packages}。對應 {usns} 則官方安全公告，其中重大或高風險 {crit_high} 則{reboot_note}",
+      "action": "在主機上執行 sudo apt update 與 sudo apt upgrade；建議排定固定的修補時段"
+    },
+    "oval_free_not_applied": {
+      "enabled": true, "category": "D", "severity": "auto",
+      "title": "{n_packages} 個套件有免費的安全修補，還沒安裝",
+      "detail": "要更新的套件：{packages}。對應 {usns} 則官方安全公告，其中重大或高風險 {crit_high} 則。這些修補放在 Ubuntu 一般的更新來源，不需要 Ubuntu Pro{reboot_note}",
+      "action": "在主機上執行 sudo apt update 與 sudo apt upgrade；建議排定固定的修補時段，或啟用自動安全更新",
+      "action_if_auto_update_failing": "在主機上執行 sudo apt update 與 sudo apt upgrade；這台主機的自動更新目前沒有在運作，請先處理「已設定自動更新，但套件清單…沒有成功更新」那一項，再排定固定的修補時段",
+      "action_if_auto_update_not_applying": "在主機上執行 sudo apt update 與 sudo apt upgrade；這台主機已設定自動更新，卻沒有把修補裝上，請一併處理「已設定自動更新，但有…免費安全修補還沒安裝」那一項，否則之後還會再累積"
+    },
+    "pro_client_pending": {
+      "enabled": true, "category": "A", "severity": "高",
+      "title": "有 {n} 個套件的安全更新，要訂閱 Ubuntu Pro 才拿得到",
+      "detail": "esm-infra（Main 套件）{infra} 個、esm-apps（Universe 套件）{apps} 個（來源：主機上的 Ubuntu Pro 用戶端）",
+      "action": "訂閱 Ubuntu Pro，在主機上執行 sudo pro attach 註冊，再執行 sudo apt update 與 sudo apt upgrade"
+    },
+    "pro_client_not_applied": {
+      "enabled": true, "category": "D", "severity": "高",
+      "title": "已訂閱 Ubuntu Pro，但有 {n} 個套件的安全更新還沒安裝",
+      "detail": "更新已經可以取得，只是還沒安裝（來源：主機上的 Ubuntu Pro 用戶端）",
+      "action": "在主機上執行 sudo apt update 與 sudo apt upgrade；建議排定固定的修補時段"
+    },
+    "pro_client_free_not_applied": {
+      "enabled": true, "category": "D", "severity": "高",
+      "title": "有 {n} 個套件的免費安全更新還沒安裝",
+      "detail": "這些更新放在 Ubuntu 一般的更新來源，不需要 Ubuntu Pro（來源：主機上的 Ubuntu Pro 用戶端）",
+      "action": "在主機上執行 sudo apt update 與 sudo apt upgrade；建議排定固定的修補時段，或啟用自動安全更新",
+      "action_if_auto_update_failing": "在主機上執行 sudo apt update 與 sudo apt upgrade；這台主機的自動更新目前沒有在運作，請先處理「已設定自動更新，但套件清單…沒有成功更新」那一項，再排定固定的修補時段",
+      "action_if_auto_update_not_applying": "在主機上執行 sudo apt update 與 sudo apt upgrade；這台主機已設定自動更新，卻沒有把修補裝上，請一併處理「已設定自動更新，但有…免費安全修補還沒安裝」那一項，否則之後還會再累積"
+    },
+    "kernel_not_running_newest": {
+      "enabled": true, "category": "B", "severity": "高",
+      "title": "已安裝新核心，但機器還在跑舊核心",
+      "detail": "執行中：{running}；已安裝最新：{newest}。核心修補要重開機才生效",
+      "action": "排定時段重開機（sudo reboot）；若停機困難，Ubuntu Pro 的 Livepatch 可在不重開機下套用高風險核心修補"
+    },
+    "reboot_required": {
+      "enabled": true, "category": "B", "severity": "中",
+      "title": "系統標示需要重開機",
+      "detail": "有更新等待重開機才生效",
+      "action": "排定時段重開機（sudo reboot）；或評估 Livepatch"
+    },
+    "long_uptime": {
+      "enabled": true, "category": "B", "severity": "中",
+      "title": "已連續運作 {days} 天沒有重開機",
+      "detail": "長時間不重開機，核心修補很可能沒有生效",
+      "action": "確認停機限制；Ubuntu Pro 的 Livepatch 只處理高風險與重大核心漏洞，不能取代所有重開機"
+    },
+    "usg_not_used": {
+      "enabled": true, "category": "C", "severity": "低",
+      "title": "未使用 CIS／DISA-STIG 基準的自動化稽核工具",
+      "detail": "沒有安裝 Ubuntu Security Guide（USG）",
+      "action": "若需要設定基準的稽核證據，可評估 Ubuntu Pro 內含的 USG（CIS 與 DISA-STIG 設定檔）；與各單位適用的組態基準對應需另行比對"
+    },
+    "ssh_root_login": {
+      "enabled": true, "category": "D", "severity": "高",
+      "title": "SSH 允許 root 直接登入", "detail": "SSH 設定 PermitRootLogin 為 yes",
+      "action": "在 /etc/ssh/sshd_config（或 /etc/ssh/sshd_config.d/ 裡的設定檔）把 PermitRootLogin 改為 no，再執行 sudo systemctl reload ssh"
+    },
+    "ssh_empty_passwords": {
+      "enabled": true, "category": "D", "severity": "高",
+      "title": "SSH 允許空密碼登入", "detail": "SSH 設定 PermitEmptyPasswords 為 yes",
+      "action": "把 PermitEmptyPasswords 改為 no，再執行 sudo systemctl reload ssh"
+    },
+    "ssh_password_auth": {
+      "enabled": true, "category": "D", "severity": "中",
+      "title": "SSH 允許密碼登入", "detail": "SSH 設定 PasswordAuthentication 為 yes，帳號可能被猜密碼",
+      "action": "先確認每位管理者都能用金鑰登入，再把 PasswordAuthentication 改為 no，執行 sudo systemctl reload ssh"
+    },
+    "ufw_inactive": {
+      "enabled": true, "category": "D", "severity": "中",
+      "title": "主機防火牆（ufw）未啟用", "detail": "ufw 狀態為 inactive",
+      "action": "先確認是否已由網路層防火牆保護。要啟用時，先執行 sudo ufw allow OpenSSH 保留遠端登入，再執行 sudo ufw enable"
+    },
+    "extra_uid0": {
+      "enabled": true, "category": "D", "severity": "高",
+      "title": "有 root 以外的最高權限帳號", "detail": "共 {n} 個（UID 為 0 的帳號都有 root 權限）",
+      "action": "在主機上執行 awk -F: '$3==0{print $1}' /etc/passwd 找出帳號，確認用途，不需要就移除"
+    },
+    "empty_password_accounts": {
+      "enabled": true, "category": "D", "severity": "高",
+      "title": "有空密碼帳號", "detail": "共 {n} 個",
+      "action": "在主機上執行 sudo awk -F: '$2==\"\"{print $1}' /etc/shadow 找出帳號，設定密碼，或用 sudo passwd -l 帳號 鎖定"
+    },
+    "auto_updates_failing": {
+      "enabled": true, "category": "D", "severity": "高",
+      "title": "已設定自動更新，但套件清單 {days} 天沒有成功更新",
+      "detail": "最後一次成功更新套件清單是 {last}（收集當天往前 {days} 天）。自動更新沒有在運作，之後公布的修補也不會自動安裝",
+      "action": "先查主機能不能連到套件來源（網路、Proxy、DNS）以及來源設定是否正確：在主機上執行 sudo apt update，看最後幾行的錯誤訊息；修好後隔天再確認套件清單有更新"
+    },
+    "auto_updates_not_applying": {
+      "enabled": true, "category": "D", "severity": "高",
+      "title": "已設定自動更新，但有 {n} 則發布超過 {days} 天的免費安全修補還沒安裝",
+      "short": "自動更新沒有實際安裝修補",
+      "detail": "套件清單有正常更新，最早一則未安裝的公告發布於 {oldest}。可能是自動更新只下載不安裝、某些套件被設定排除或保留（hold）、安裝時出錯，或主機剛安裝、剛啟用自動更新還沒跑過",
+      "action": "查看 /var/log/unattended-upgrades/ 的紀錄，以及 /etc/apt/apt.conf.d/ 的 20auto-upgrades 與 50unattended-upgrades 設定；執行 sudo unattended-upgrade --dry-run --debug 看哪些套件被略過、原因是什麼；用 apt-mark showhold 確認有沒有被保留的套件"
+    },
+    "no_auto_updates": {
+      "enabled": true, "category": "D", "severity": "低",
+      "title": "未啟用自動安全更新", "detail": "unattended-upgrades 沒有設定為每天執行",
+      "action": "依單位的變更管理規定決定是否啟用；要啟用時執行 sudo dpkg-reconfigure -plow unattended-upgrades"
+    },
+    "third_party_packages": {
+      "enabled": true, "category": "D", "severity": "中",
+      "title": "有 {n} 個非 Ubuntu 官方來源的套件", "short": "非 Ubuntu 官方來源的套件",
+      "detail": "第三方或來源不明的套件，不在 Ubuntu 與 Ubuntu Pro 的修補範圍",
+      "action": "在主機上執行 pro security-status --thirdparty 與 pro security-status --unavailable 列出這些套件，盤點來源並向原廠確認更新方式"
+    }
+  },
+
+  "report_text": {
+    "title": "Ubuntu 主機資安健檢報告",
+    "year_note": "維護年限說明：LTS 版本標準維護 5 年（只涵蓋 Main 套件庫）；訂閱 Ubuntu Pro（ESM）共 10 年（含 Universe）；加購 Legacy 最長 15 年。",
+    "_priority_說明": "「建議處理順序」依報告內容產生：只列這份報告實際出現的項目，順序照下面排列。{hosts} 換成主機代號，{items} 換成發現項目。",
+    "priority": {
+      "auto_update_failing": "先修好自動更新（{hosts}）：自動更新已設定，但套件清單很久沒有成功更新。先查網路與套件來源，否則之後的修補也不會自動安裝。",
+      "auto_update_not_applying": "查明自動更新為什麼沒有安裝修補（{hosts}）：自動更新已設定、套件清單也有更新，卻有發布超過門檻天數（預設 7 天）的免費修補沒裝。先看 unattended-upgrades 的紀錄，否則手動修完之後還會再累積。",
+      "d_high": "當天就能改、不用採購的高風險設定（{hosts}）：{items}。",
+      "patches_available": "安裝已經可以取得的安全修補（{hosts}）：在主機上執行 sudo apt update 與 sudo apt upgrade；含核心更新的要排時段重開機。只想先修重大與高風險時，見各主機的「重大與高風險公告」。",
+      "no_support": "已無官方維護或非 LTS 的主機（{hosts}）：Ubuntu Pro 也無法提供修補，規劃升級到仍在維護期內的 LTS 版本。",
+      "a_class": "要訂閱 Ubuntu Pro 才拿得到修補的主機（{hosts}）：評估訂閱 Ubuntu Pro 取得這些修補；已過標準維護期的主機，同時排定升級計畫。",
+      "b_class": "修補要重開機才生效的主機（{hosts}）：排定重開機時段；停機困難的，評估 Livepatch（只處理高風險與重大核心漏洞，不能取代所有重開機）。",
+      "d_other": "其他設定與管理項目（{hosts}）：{items}，依各項的建議排入例行維護。",
+      "c_class": "需要設定基準的稽核證據時（{hosts}）：評估 Ubuntu Pro 內含的 USG，並與適用的組態基準比對。",
+      "broken": "收集檔損壞或格式不符、沒有分析的主機（{hosts}）：請重新收集。",
+      "unchecked": "有項目未能檢查（{hosts}）：收集時權限不足或缺資料，不代表沒有問題；可加 --sudo 重新收集，或依各主機的說明補資料。",
+      "none": "這次沒有需要處理的發現。維持定期更新，並定期重新健檢。"
+    },
+    "crit_high_note": "只修重大與高風險公告時，其餘公告會累積，仍建議排時段執行 sudo apt update 與 sudo apt upgrade 全面更新。核心公告修完要重開機才生效（停機困難時可評估 Livepatch）。sudo pro fix 需要主機能連到 Canonical，或內部有 Landscape 離線（air-gapped）環境；兩種都沒有時，用 apt 那一行。「攻擊途徑」取自官方資料裡這則公告各 CVE 的 CVSS 向量，列出可及範圍最大的一種與最高分數（CVSS 3.x 與 4.0 混用）：網路＝不必先登入主機就可能被利用，對外服務的主機要優先處理；相鄰網路＝要在同一個網段；本機＝要先能登入或在主機上執行程式；實體接觸＝要能碰到機器；官方未提供＝官方資料沒附 CVSS。核心公告合併的那一列，取各則中範圍最大的途徑與最高分。這是可能的途徑，不代表一定能被利用。",
+    "limitations": [
+      "本健檢只讀取系統資訊，不做弱點利用測試、不修改設定，不等同滲透測試。",
+      "只涵蓋 Ubuntu 官方套件庫的套件；第三方軟體（例如自行安裝的應用程式）的弱點不在比對範圍。",
+      "官方弱點資料以「已安裝的套件版本」比對：舊核心套件若仍留在系統上，也可能被列入；實際執行中的核心請看 B 類。",
+      "建議欄的指令是一般做法，執行前請依單位的變更管理規定評估，並先在測試環境確認。",
+      "標示「未能檢查」的項目，代表收集時權限不足或主機沒有對應工具，不代表沒有問題。",
+      "結果反映收集當下的狀態，以及報告上所列官方資料日期之前公布的弱點。"
+    ]
+  }
+}

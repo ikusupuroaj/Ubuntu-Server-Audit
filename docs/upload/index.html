@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>主機情境問卷</title>
+<style>
+:root{--fg:#1d1d1f;--mut:#5f6368;--line:#dfe1e5;--card:#f5f6f8;--bg:#eef0f3;--acc:#1a5fb4;--accbg:#e8f0fb;--ok:#2e7d32;--okbg:#e8f5e9;--red:#c62828;--redbg:#fdecea;--amb:#a15c00;--ambbg:#fff4e5}
+*{box-sizing:border-box}
+body{margin:0;color:var(--fg);background:var(--bg);font:15px/1.7 "PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:24px 16px 120px}
+h1{font-size:24px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.mut{color:var(--mut)}
+.small{font-size:13px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:14px 0}
+.card.top{border-top:8px solid var(--acc)}
+.drop{display:block;border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;background:var(--card);cursor:pointer}
+.drop.on{border-color:var(--acc);background:var(--accbg)}
+.drop input{display:none}
+.btn{font:inherit;border:0;border-radius:8px;padding:10px 18px;cursor:pointer;background:var(--acc);color:#fff;font-weight:600}
+.btn.sec{background:#fff;color:var(--acc);border:1px solid var(--acc)}
+.btn:disabled{background:#c8ccd2;color:#fff;border-color:#c8ccd2;cursor:not-allowed}
+.err{background:var(--redbg);color:var(--red);border-radius:8px;padding:10px 14px;margin:10px 0}
+.okbox{background:var(--okbg);color:var(--ok);border-radius:8px;padding:12px 14px;margin:10px 0}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+.meta div{background:var(--card);border-radius:8px;padding:8px 10px}
+.meta b{display:block;font-size:13px;color:var(--mut);font-weight:400}
+details.host{background:#fff;border:1px solid var(--line);border-radius:10px;margin:12px 0;overflow:hidden}
+details.host>summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+details.host>summary::-webkit-details-marker{display:none}
+details.host>summary::before{content:"▸";color:var(--mut);transition:transform .15s}
+details.host[open]>summary::before{transform:rotate(90deg)}
+.tag{font-weight:700;font-size:17px}
+.st{font-size:13px;border-radius:99px;padding:2px 10px;margin-left:auto}
+.st.red{background:var(--redbg);color:var(--red)}
+.st.amb{background:var(--ambbg);color:var(--amb)}
+.st.ok{background:var(--okbg);color:var(--ok)}
+.st.na{background:var(--card);color:var(--mut)}
+.hbody{padding:0 18px 8px;border-top:1px solid var(--line)}
+.q{padding:14px 0;border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:0}
+.qt{font-weight:600}
+.req{color:var(--red);margin-left:2px}
+.why{font-size:13px;color:var(--mut);margin:2px 0 6px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2px 16px}
+.opts label{display:flex;gap:8px;align-items:flex-start;padding:5px 4px;border-radius:6px;cursor:pointer}
+.opts label:hover{background:var(--card)}
+.opts input{margin-top:5px;flex:0 0 auto}
+.warnq{color:var(--red);font-size:13px;margin-top:4px}
+.field{margin:10px 0}
+.field label{display:block;font-weight:600;margin-bottom:4px}
+.field input[type=text],.field input[type=email],.field input[type=tel]{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.field input:focus{outline:2px solid var(--acc);border-color:var(--acc)}
+.notice{background:var(--card);border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.7}
+.notice ol{margin:4px 0;padding-left:20px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);box-shadow:0 -2px 10px rgba(0,0,0,.06);z-index:5}
+.bar .in{max-width:820px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.bar .msg{flex:1 1 260px;font-size:14px}
+.hidden{display:none!important}
+textarea{width:100%;min-height:260px;font:13px/1.5 "SF Mono",Menlo,Consolas,monospace;border:1px solid var(--line);border-radius:8px;padding:10px}
+code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;background:var(--card);padding:1px 5px;border-radius:4px;word-break:break-all}
+@media (max-width:560px){.card{padding:14px}.bar .btn{flex:1 1 100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="card top">
+  <h1>主機情境問卷</h1>
+  <p class="mut" style="margin:6px 0 0">健檢工具只能看到主機上「還沒裝的更新」和「設定問題」，看不到這台主機做什麼用、誰連得到。請依每台主機的實際情況勾選，顧問會據此排定處理的先後順序與期限。</p>
+  <p class="small mut" style="margin:8px 0 0">只需要勾選，不需要提供 IP、主機名稱、帳號或設定檔。<span class="req">*</span> 是必答題。</p>
+</div>
+
+<div class="card">
+  <h2>1. 選擇健檢結果檔</h2>
+  <p class="small mut" style="margin-top:0">請選擇健檢工具產生的 <code>findings-ai-日期時間.json</code>。檔案只在您的瀏覽器裡讀取，按下最後的「送出」之前，不會傳到任何地方。報告檔（report-….html）與 oval-detail.json 不需要提供。</p>
+  <label class="drop" id="drop">
+    <input type="file" id="file" accept=".json,application/json">
+    <div><b>點這裡選擇檔案</b>，或把檔案拖進來</div>
+    <div class="small mut" id="fname">尚未選擇</div>
+  </label>
+  <div id="ferr" class="err hidden"></div>
+  <div id="finfo" class="meta hidden"></div>
+</div>
+
+<div id="qwrap" class="hidden">
+  <div class="card" style="padding-bottom:8px">
+    <h2>2. 依主機回答問題</h2>
+    <p class="small mut" style="margin:0">每台主機一個區塊，點標題可以展開或收合。不清楚的題目請選「不確定」，也算已回答。</p>
+    <p class="small" style="margin:6px 0 0"><button type="button" class="btn sec" id="openall" style="padding:4px 12px">全部展開</button> <button type="button" class="btn sec" id="closeall" style="padding:4px 12px">全部收合</button></p>
+  </div>
+  <div id="hosts"></div>
+
+  <div class="card" id="contact">
+    <h2>3. 聯絡資料（用網頁送出時必填）</h2>
+    <p class="small mut" style="margin-top:0">顧問會用這些資料聯絡您並寄回分析報告。若選擇「不上傳，下載回答檔」改用 Email 寄送，這一段可以不填。</p>
+    <div class="field"><label for="c_org">機關名稱<span class="req">*</span></label><input type="text" id="c_org" maxlength="60" autocomplete="organization"></div>
+    <div class="field"><label for="c_unit">單位<span class="req">*</span></label><input type="text" id="c_unit" maxlength="60" placeholder="例：資訊室"></div>
+    <div class="field"><label for="c_name">聯絡人<span class="req">*</span></label><input type="text" id="c_name" maxlength="40" autocomplete="name"></div>
+    <div class="field"><label for="c_email">Email<span class="req">*</span></label><input type="email" id="c_email" maxlength="100" autocomplete="email"></div>
+    <div class="field"><label for="c_tel">電話（選填）</label><input type="tel" id="c_tel" maxlength="30" autocomplete="tel"></div>
+    <div class="hp" aria-hidden="true"><label>網站<input type="text" id="c_web" tabindex="-1" autocomplete="off"></label></div>
+    <div class="notice">
+      <b>個人資料蒐集告知</b>
+      <ol>
+        <li>蒐集目的：本次主機資安健檢的分析、報告交付與聯繫。</li>
+        <li>蒐集項目：機關名稱、單位、聯絡人姓名、Email、電話。</li>
+        <li>利用期間與地區：存放於健檢顧問的 Google 雲端硬碟；結案後滿 90 天刪除檔案與聯絡資料（雲端硬碟的垃圾桶會再保留 30 天後永久清除）。</li>
+        <li>利用方式：只用於本次健檢聯繫，不提供給第三人。</li>
+        <li>您可以向健檢顧問請求查詢、閱覽、更正或刪除您的資料。</li>
+        <li>不提供聯絡資料就無法用網頁送出，可改用「不上傳，下載回答檔」，再以 Email 寄給顧問。</li>
+      </ol>
+      <label style="display:flex;gap:8px;margin-top:6px;cursor:pointer"><input type="checkbox" id="c_ok"> <span>我已閱讀並同意上述個人資料蒐集告知<span class="req">*</span></span></label>
+    </div>
+  </div>
+
+  <div id="done" class="card hidden"></div>
+
+  <details class="card small" id="consult">
+    <summary style="cursor:pointer"><b>顧問專用：產生純文字問卷</b>（客戶無法開啟本網頁時，貼進 Email 使用）</summary>
+    <p class="mut">依目前載入的檔案產生每台主機的勾選文字，客戶在 [ ] 中打 x 後回信即可。</p>
+    <button type="button" class="btn sec" id="mktext">產生純文字問卷</button>
+    <textarea id="plain" class="hidden" readonly></textarea>
+  </details>
+</div>
+</div>
+
+<div class="bar hidden" id="bar"><div class="in">
+  <div class="msg" id="barmsg"></div>
+  <button type="button" class="btn sec" id="dl">不上傳，下載回答檔</button>
+  <button type="button" class="btn" id="send">送出</button>
+</div></div>
+
+<script>
+"use strict";
+// Google Apps Script 網址（部署後填入）。空字串時「送出」不能用，只能下載回答檔。
+var ENDPOINT = "https://script.google.com/macros/s/AKfycbwOn-MJNl6mPVnzxP3AGWGChZIeFQAih_ja3BFlZdBNwSmx_hHmKLFq2slNGEdr_jOK/exec";
+
+// 題目與選項：與顧問端的分析規則使用同一份選項文字與題目條件，改這裡要通知顧問同步修改
+var Q = {
+  use:{label:"用途",text:"這台主機主要的用途是？",req:true,opts:["公開網站／API","內部業務系統","資料庫","檔案共享","帳號驗證（AD／LDAP）","跳板／管理主機","開發測試","CI／CD 建置","監控／日誌","主機在但服務已停用","不確定"]},
+  reach:{label:"可達性",text:"哪些網路連得到這台主機？",req:true,opts:["公開網際網路","透過 VPN","內網（一般使用者網段）","只限管理網段","完全隔離","不確定"]},
+  importance:{label:"重要性",text:"這台主機上的資料或服務有多重要？",req:true,opts:["重要服務／敏感或個人資料","一般業務","低重要性／測試用途","不確定"]},
+  window:{label:"維護窗口",text:"這台主機什麼時候可以安裝更新並重新開機？",req:false,opts:["隨時可重開","7 天內可安排","每月固定維護日","每季維護","需專案申請／很難停機","不確定"]},
+  direction:{label:"處理方向",text:"這台主機的作業系統之後打算怎麼處理？",req:false,opts:["評估 Ubuntu Pro","計畫半年內升級 LTS","計畫一年以上才升級","準備淘汰","尚未決定"]},
+  controls:{label:"補償控制",text:"這台主機前面已經有哪些防護？（可複選）",req:false,multi:true,exclusive:["都沒有","不確定"],opts:["網路防火牆／ACL","WAF","VPN","MFA","網段隔離","都沒有","不確定"]}
+};
+var ORDER = ["use","reach","importance","window","direction","controls"];
+var NO_CONTROLS = ["只限管理網段","完全隔離"];
+var WARN = "未回答會影響資安判讀的準確度";
+
+var S = {file:null, name:"", sha:"", data:null, hosts:[], ans:{}};
+
+function $(id){return document.getElementById(id);}
+function el(tag, attrs, kids){
+  var e = document.createElement(tag);
+  if (attrs) for (var k in attrs){
+    if (k === "text") e.textContent = attrs[k];
+    else if (k === "cls") e.className = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  (kids || []).forEach(function(c){ if (c) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return e;
+}
+function num(x){return typeof x === "number" && isFinite(x) ? x : 0;}
+
+// ---------- 讀檔 ----------
+function fail(msg){
+  var b = $("ferr"); b.textContent = msg; b.classList.remove("hidden");
+  $("finfo").classList.add("hidden"); $("qwrap").classList.add("hidden"); $("bar").classList.add("hidden");
+  S.data = null;
+}
+function readFile(f){
+  $("ferr").classList.add("hidden");
+  $("fname").textContent = f.name + "（" + Math.round(f.size/1024) + " KB）";
+  if (f.size > 8*1024*1024) return fail("檔案超過 8 MB，看起來不是健檢工具產生的 findings-ai 檔。");
+  var r = new FileReader();
+  r.onload = function(){
+    var buf = r.result, txt;
+    try { txt = new TextDecoder("utf-8",{fatal:true, ignoreBOM:true}).decode(buf); } catch(e){ return fail("檔案不是 UTF-8 文字檔，請確認選的是 findings-ai-日期時間.json。"); }
+    var d;
+    try { d = JSON.parse(txt.replace(/^\uFEFF/, "")); } catch(e){ return fail("檔案不是有效的 JSON，請確認選的是 findings-ai-日期時間.json。"); }
+    var bad = check(d);
+    if (bad) return fail(bad);
+    sha256(buf).then(function(h){
+      S.file = txt; S.name = f.name; S.sha = h; S.data = d; S.ans = {};
+      S.hosts = d.hosts.map(plan);
+      showInfo(); render(); update();
+    }).catch(function(){ fail("瀏覽器無法計算檔案指紋，請改用最新版的 Chrome、Edge 或 Firefox。"); });
+  };
+  r.onerror = function(){ fail("檔案讀取失敗，請再選一次。"); };
+  r.readAsArrayBuffer(f);
+}
+function check(d){
+  if (!d || typeof d !== "object" || !Array.isArray(d.hosts)) return "這不是健檢工具產生的結果檔（找不到主機清單）。";
+  if (typeof d.schema !== "string" || d.schema.indexOf("offline-ubuntu-healthcheck/") !== 0) return "這不是健檢工具產生的結果檔。";
+  if (!/^0\.(7|8|9)\.|^[1-9]\d*\./.test(String(d.tool_version || ""))) return "這份檔案由舊版工具（" + (d.tool_version || "版本不明") + "）產生，請更新到 0.7.0 以上再掃描一次。";
+  if (d.deidentified !== true) return "這份檔案沒有去識別化，請改選 findings-ai-日期時間.json。";
+  if (!d.hosts.length) return "檔案裡沒有任何主機。";
+  if (d.hosts.length > 200) return "主機超過 200 台，請分批提供，或直接與顧問聯絡。";
+  for (var i = 0; i < d.hosts.length; i++){
+    if (!/^H\d{2,3}$/.test(String(d.hosts[i].tag || ""))) return "主機代號不是 H01、H02… 的格式，請確認選的是 findings-ai 檔。";
+  }
+  return "";
+}
+function sha256(buf){
+  return crypto.subtle.digest("SHA-256", buf).then(function(h){
+    return Array.prototype.map.call(new Uint8Array(h), function(b){ return ("0" + b.toString(16)).slice(-2); }).join("");
+  });
+}
+function scanTime(d){
+  var g = String(d.generated_at || "");
+  var m = g.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/);
+  return m ? m[1] + "-" + m[2] + "-" + m[3] + " " + m[4] + ":" + m[5] : "（檔案未記錄）";
+}
+
+// 每台主機要問哪些題目（與顧問分析規則相同）
+function plan(h){
+  var p = h.patches || {}, f = Array.isArray(h.findings) ? h.findings : [], cf = Array.isArray(h.crit_high_fixes) ? h.crit_high_fixes : [];
+  var cat = function(c){ return f.some(function(x){ return x && x.category === c; }); };
+  var gap = num(p.needs_pro) > 0 || num(p.free_not_applied) > 0 || num(p.pro_not_applied) > 0 || cat("A") || cat("B");
+  var entry = cf.filter(function(x){ return x && (x.attack_vector === "網路" || x.attack_vector === "相鄰網路"); }).length;
+  var o = {tag:String(h.tag), os:String(h.os || "版本不明"), err:h.error ? String(h.error) : "", entry:entry, why:{}, qs:[]};
+  if (o.err || (!gap && !cat("D"))) return o;
+  o.qs = ["use","reach","importance"];
+  var kern = cf.some(function(x){ return x && x.kernel === true; });
+  if (num(p.free_not_applied) > 0 || cat("B") || kern){
+    o.qs.push("window");
+    o.why.window = num(p.free_not_applied) > 0 ? "這台主機有 " + num(p.free_not_applied) + " " + (p.unit || "則安全公告") + "可以免費更新，還沒安裝。" : "這台主機有更新需要重新開機才會生效。";
+  }
+  if (cat("A") || h.support_status === "eol" || h.support_status === "nonlts"){
+    o.qs.push("direction");
+    o.why.direction = num(p.needs_pro) > 0 ? "這台主機有 " + num(p.needs_pro) + " " + (p.unit || "則安全公告") + "要訂閱 Ubuntu Pro 才拿得到更新。" : "這台主機的作業系統已過標準維護期。";
+  }
+  if (entry > 0){
+    o.qs.push("controls");
+    o.why.controls = "這台主機有 " + entry + " 則可能從網路被利用的重大或高風險安全問題。";
+  }
+  return o;
+}
+function asked(o, k){
+  if (o.qs.indexOf(k) < 0) return false;
+  if (k !== "controls") return true;
+  var r = (S.ans[o.tag] || {}).reach;
+  return !!r && NO_CONTROLS.indexOf(r) < 0;   // 先回答可達性，不是管理網段或完全隔離才問
+}
+function answered(o, k){
+  var v = (S.ans[o.tag] || {})[k];
+  return Array.isArray(v) ? v.length > 0 : !!v;
+}
+
+// ---------- 畫面 ----------
+function showInfo(){
+  var d = S.data, b = $("finfo"); b.innerHTML = "";
+  var n = S.hosts.filter(function(o){ return o.qs.length; }).length;
+  [["掃描時間", scanTime(d)], ["工具版本", String(d.tool_version)], ["主機數", d.hosts.length + " 台"], ["要回答的主機", n + " 台"]].forEach(function(x){
+    b.appendChild(el("div", null, [el("b", {text:x[0]}), x[1]]));
+  });
+  b.classList.remove("hidden");
+}
+function render(){
+  var box = $("hosts"); box.innerHTML = "";
+  S.hosts.forEach(function(o, i){
+    var d = el("details", {cls:"host", id:"h_" + o.tag});
+    if (i === 0) d.open = true;
+    d.appendChild(el("summary", null, [el("span", {cls:"tag", text:o.tag}), el("span", {cls:"mut small", text:o.os}), el("span", {cls:"st", id:"st_" + o.tag})]));
+    var body = el("div", {cls:"hbody"});
+    if (o.err) body.appendChild(el("p", {cls:"mut", text:"這台主機的資料讀取失敗（" + o.err + "），不用回答，顧問會另外與您確認。"}));
+    else if (!o.qs.length) body.appendChild(el("p", {cls:"mut", text:"這台主機沒有需要處理的項目，不用回答。"}));
+    o.qs.forEach(function(k){ body.appendChild(question(o, k)); });
+    d.appendChild(body); box.appendChild(d);
+  });
+  $("qwrap").classList.remove("hidden"); $("bar").classList.remove("hidden");
+}
+function question(o, k){
+  var q = Q[k], name = "q_" + o.tag + "_" + k;
+  var wrap = el("div", {cls:"q", id:name});
+  var t = el("div", {cls:"qt"}, [q.label + "：" + q.text]);
+  if (q.req) t.appendChild(el("span", {cls:"req", text:"*"}));
+  wrap.appendChild(t);
+  if (o.why[k]) wrap.appendChild(el("div", {cls:"why", text:o.why[k]}));
+  var opts = el("div", {cls:"opts"});
+  q.opts.forEach(function(txt, i){
+    var inp = el("input", {type:q.multi ? "checkbox" : "radio", name:name, value:txt, id:name + "_" + i});
+    inp.addEventListener("change", function(){ pick(o, k, txt, inp.checked); });
+    opts.appendChild(el("label", {"for":name + "_" + i}, [inp, el("span", {text:(i + 1) + ". " + txt})]));
+  });
+  wrap.appendChild(opts);
+  wrap.appendChild(el("div", {cls:"warnq hidden", id:name + "_w", text:q.req ? "這題必須回答" : WARN}));
+  return wrap;
+}
+function pick(o, k, txt, on){
+  var a = S.ans[o.tag] = S.ans[o.tag] || {};
+  var q = Q[k];
+  if (!q.multi){ a[k] = txt; }
+  else {
+    var v = a[k] || [];
+    if (on){
+      if (q.exclusive.indexOf(txt) >= 0) v = [txt];               // 「都沒有」「不確定」只能單獨選
+      else v = v.filter(function(x){ return q.exclusive.indexOf(x) < 0; }).concat([txt]);
+    } else v = v.filter(function(x){ return x !== txt; });
+    a[k] = v;
+    var name = "q_" + o.tag + "_" + k;
+    document.querySelectorAll('input[name="' + name + '"]').forEach(function(x){ x.checked = v.indexOf(x.value) >= 0; });
+  }
+  if (k === "reach" && !asked(o, "controls") && a.controls){
+    delete a.controls;   // 答案清掉時，畫面上的勾選也要一起取消，免得改回來時看起來還勾著
+    document.querySelectorAll('input[name="q_' + o.tag + '_controls"]').forEach(function(x){ x.checked = false; });
+  }
+  update();
+}
+function stats(){
+  var r = {reqMiss:0, optMiss:0, hosts:{}};
+  S.hosts.forEach(function(o){
+    var h = r.hosts[o.tag] = {reqMiss:0, optMiss:0, n:0};
+    o.qs.forEach(function(k){
+      if (!asked(o, k)) return;
+      h.n++;
+      if (!answered(o, k)){ if (Q[k].req) h.reqMiss++; else h.optMiss++; }
+    });
+    r.reqMiss += h.reqMiss; r.optMiss += h.optMiss;
+  });
+  return r;
+}
+function contactOk(){
+  var need = ["c_org","c_unit","c_name","c_email"].every(function(id){ return $(id).value.trim().length > 0; });
+  var mail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("c_email").value.trim());
+  return {all:need && mail && $("c_ok").checked, mailBad:$("c_email").value.trim() !== "" && !mail};
+}
+function update(){
+  if (!S.data) return;
+  var st = stats();
+  S.hosts.forEach(function(o){
+    var h = st.hosts[o.tag], b = $("st_" + o.tag);
+    if (!o.qs.length){ b.className = "st na"; b.textContent = "不用回答"; }
+    else if (h.reqMiss){ b.className = "st red"; b.textContent = "必答還差 " + h.reqMiss + " 題"; }
+    else if (h.optMiss){ b.className = "st amb"; b.textContent = "必答完成，選答未填 " + h.optMiss + " 題"; }
+    else { b.className = "st ok"; b.textContent = "已全部回答"; }
+    o.qs.forEach(function(k){
+      var w = $("q_" + o.tag + "_" + k), on = asked(o, k);
+      w.classList.toggle("hidden", !on);
+      $("q_" + o.tag + "_" + k + "_w").classList.toggle("hidden", !on || answered(o, k));
+    });
+  });
+  var c = contactOk(), msg = $("barmsg");
+  $("dl").disabled = st.reqMiss > 0;
+  $("send").disabled = st.reqMiss > 0 || !c.all || !ENDPOINT;
+  if (st.reqMiss){
+    msg.innerHTML = '<span style="color:var(--red)">還有 ' + st.reqMiss + ' 題必答題沒有回答，回答完才能送出。</span> <button type="button" class="btn sec" id="gomiss" style="padding:2px 10px;font-size:13px">前往未答的題目</button>';
+    $("gomiss").addEventListener("click", gotoMissing);
+  }
+  else {
+    var t = st.optMiss ? '<span style="color:var(--red)">有 ' + st.optMiss + " 題選答未填，" + WARN + "。</span> " : '<span style="color:var(--ok)">問題都回答完了。</span> ';
+    if (!ENDPOINT) t += "網頁上傳功能尚未開放，請下載回答檔後用 Email 寄給顧問。";
+    else if (!c.all) t += c.mailBad ? "Email 格式不正確。" : "用網頁送出前，請填寫聯絡資料並勾選同意。";
+    msg.innerHTML = t;
+  }
+}
+
+function gotoMissing(){
+  for (var i = 0; i < S.hosts.length; i++){
+    var o = S.hosts[i];
+    for (var j = 0; j < o.qs.length; j++){
+      var k = o.qs[j];
+      if (Q[k].req && asked(o, k) && !answered(o, k)){
+        $("h_" + o.tag).open = true;
+        $("q_" + o.tag + "_" + k).scrollIntoView({behavior:"smooth", block:"center"});
+        return;
+      }
+    }
+  }
+}
+
+// ---------- 回答檔 ----------
+function newId(){
+  var d = new Date(), p = function(n){ return ("0" + n).slice(-2); };
+  var abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", r = new Uint8Array(4), s = "";
+  crypto.getRandomValues(r); r.forEach(function(x){ s += abc[x % abc.length]; });
+  return "HC-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()) + "-" + s;
+}
+function isoNow(){
+  var d = new Date(), off = -d.getTimezoneOffset(), p = function(n){ return ("0" + Math.floor(Math.abs(n))).slice(-2); };
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) +
+    (off >= 0 ? "+" : "-") + p(off / 60) + ":" + p(off % 60);
+}
+function buildAnswers(channel){
+  var hosts = S.hosts.map(function(o){
+    var a = S.ans[o.tag] || {}, out = {}, missing = [], skipped = [];
+    ORDER.forEach(function(k){
+      if (!asked(o, k)){ skipped.push(k); return; }
+      var v = a[k], q = Q[k];
+      if (q.multi) out[k] = (v && v.length) ? v.map(function(x){ return {code:q.opts.indexOf(x) + 1, text:x}; }) : null;
+      else out[k] = v ? {code:q.opts.indexOf(v) + 1, text:v} : null;
+      if (!out[k]) missing.push(k);
+    });
+    return {tag:o.tag, os:o.os, asked:o.qs.length > 0, answers:out, unanswered_optional:missing, not_asked:skipped};
+  });
+  return {
+    schema:"offline-ubuntu-healthcheck-answers/1",
+    submission_id:newId(), created_at:isoNow(), channel:channel,
+    findings_file:S.name, findings_sha256:S.sha,
+    generated_at:String(S.data.generated_at || ""), tool_version:String(S.data.tool_version || ""), basis_month:String(S.data.basis_month || ""),
+    labels:ORDER.reduce(function(m, k){ m[k] = Q[k].label; return m; }, {}),
+    hosts:hosts
+  };
+}
+function download(name, text){
+  var a = el("a", {href:URL.createObjectURL(new Blob([text], {type:"application/json"})), download:name});
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+function done(html){
+  var b = $("done"); b.innerHTML = html; b.classList.remove("hidden"); b.scrollIntoView({behavior:"smooth"});
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function saveAnswers(ans, why){
+  var name = "answers-" + ans.submission_id + ".json";
+  download(name, JSON.stringify(ans, null, 2));
+  done((why ? '<div class="err">' + esc(why) + "</div>" : "") +
+    '<div class="okbox"><b>回答檔已下載：</b><code>' + esc(name) + "</code></div>" +
+    "<p>請把下面兩個檔案一起用 Email 寄給健檢顧問：</p><ol><li><code>" + esc(S.name) + "</code>（健檢結果檔）</li><li><code>" + esc(name) + "</code>（剛下載的回答檔）</li></ol>" +
+    '<p class="small mut">回答檔只有各主機的答案與編號 ' + esc(ans.submission_id) + "，不含聯絡資料。瀏覽器沒有自動下載時，請檢查是否被擋下。</p>");
+}
+
+$("dl").addEventListener("click", function(){
+  if (stats().reqMiss) return;
+  saveAnswers(buildAnswers("email"), "");
+});
+$("send").addEventListener("click", function(){
+  if (stats().reqMiss || !contactOk().all || !ENDPOINT) return;
+  var btn = $("send"); btn.disabled = true; btn.textContent = "送出中…";
+  var ans = buildAnswers("upload");
+  var body = {
+    findings_name:S.name, findings_sha256:S.sha, findings:S.file, answers:ans,
+    contact:{org:$("c_org").value.trim(), unit:$("c_unit").value.trim(), name:$("c_name").value.trim(), email:$("c_email").value.trim(), tel:$("c_tel").value.trim(), consent:true},
+    hp:$("c_web").value
+  };
+  var ctl = new AbortController(), timer = setTimeout(function(){ ctl.abort(); }, 60000);
+  // text/plain 不會觸發 CORS 預檢，Apps Script 才收得到
+  fetch(ENDPOINT, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body), signal:ctl.signal, redirect:"follow"})
+    .then(function(r){ return r.json(); })
+    .then(function(r){
+      clearTimeout(timer);
+      if (!r || !r.ok){ var x = new Error((r && r.error) || "收件端沒有回應成功"); x.server = true; throw x; }
+      btn.textContent = "已送出";
+      done('<div class="okbox"><b>已送出，謝謝您。</b></div><p>您的送件編號：<b style="font-size:18px">' + esc(r.id) + "</b></p>" +
+        '<p class="small mut">請記下這個編號，聯絡顧問時提供即可。' + (r.duplicate ? "這份健檢結果檔先前已送出過，顧問會以最新一次的回答為準。" : "") + "</p>");
+      document.querySelectorAll("input,button").forEach(function(x){ if (x.id !== "openall" && x.id !== "closeall") x.disabled = true; });
+    })
+    .catch(function(e){
+      clearTimeout(timer); btn.textContent = "送出"; update();
+      var why = e && e.server ? e.message : (e && e.name === "AbortError" ? "連線逾時" : "連不上收件端");
+      saveAnswers(ans, "網頁送不出去（" + why + "）。" + (e && e.server ? "" : "可能是所在網路擋住了上傳。") + "已改為下載回答檔，請用 Email 寄給顧問。");
+    });
+});
+
+// ---------- 顧問用：純文字問卷 ----------
+$("mktext").addEventListener("click", function(){
+  if (!S.data) return;
+  var L = [];
+  L.push("主機情境問卷（健檢結果檔：" + S.name + "）");
+  L.push("請在符合的選項 [ ] 中打 x，例如 [x]。標 * 的是必答題；不清楚請勾「不確定」。");
+  L.push("補償控制可以複選；「都沒有」「不確定」只能單獨勾選。");
+  L.push("可達性勾「只限管理網段」或「完全隔離」的主機，補償控制不用回答。");
+  S.hosts.forEach(function(o){
+    L.push(""); L.push("== " + o.tag + "（" + o.os + "）==");
+    if (o.err){ L.push("這台主機的資料讀取失敗，不用回答，顧問會另外與您確認。"); return; }
+    if (!o.qs.length){ L.push("這台主機沒有需要處理的項目，不用回答。"); return; }
+    o.qs.forEach(function(k){
+      var q = Q[k];
+      L.push(""); L.push(q.label + (q.req ? " *" : "") + "：" + q.text + (o.why[k] ? "（" + o.why[k] + "）" : ""));
+      q.opts.forEach(function(t, i){ L.push("  [ ] " + (i + 1) + ". " + t); });
+    });
+  });
+  var t = $("plain"); t.value = L.join("\n"); t.classList.remove("hidden"); t.select();
+});
+
+// ---------- 事件 ----------
+$("file").addEventListener("change", function(e){ if (e.target.files[0]) readFile(e.target.files[0]); });
+var drop = $("drop");
+["dragenter","dragover"].forEach(function(n){ drop.addEventListener(n, function(e){ e.preventDefault(); drop.classList.add("on"); }); });
+["dragleave","drop"].forEach(function(n){ drop.addEventListener(n, function(e){ e.preventDefault(); drop.classList.remove("on"); }); });
+drop.addEventListener("drop", function(e){ if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+["c_org","c_unit","c_name","c_email","c_tel","c_ok"].forEach(function(id){ $(id).addEventListener("input", update); $(id).addEventListener("change", update); });
+$("openall").addEventListener("click", function(){ document.querySelectorAll("details.host").forEach(function(d){ d.open = true; }); });
+$("closeall").addEventListener("click", function(){ document.querySelectorAll("details.host").forEach(function(d){ d.open = false; }); });
+</script>
+</body>
+</html>

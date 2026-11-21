@@ -1,0 +1,2 @@
+APT::Periodic::Update-Package-Lists "1";
+__EXIT__=0
