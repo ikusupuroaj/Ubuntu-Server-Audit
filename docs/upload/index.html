@@ -62,6 +62,13 @@ details.host[open]>summary::before{transform:rotate(90deg)}
 .hidden{display:none!important}
 textarea{width:100%;min-height:260px;font:13px/1.5 "SF Mono",Menlo,Consolas,monospace;border:1px solid var(--line);border-radius:8px;padding:10px}
 code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;background:var(--card);padding:1px 5px;border-radius:4px;word-break:break-all}
+dialog.modal{border:0;border-radius:12px;padding:0;max-width:min(480px,calc(100vw - 32px));box-shadow:0 10px 40px rgba(0,0,0,.25);color:var(--fg)}
+dialog.modal:not([open]){display:none}
+dialog.modal::backdrop{background:rgba(0,0,0,.45)}
+dialog.modal .in{padding:22px 22px 18px}
+dialog.modal h2{margin-bottom:8px}
+dialog.modal .mail{display:block;font-size:17px;font-weight:700;margin:8px 0;word-break:break-all}
+dialog.modal .acts{text-align:right;margin-top:14px}
 @media (max-width:560px){.card{padding:14px}.bar .btn{flex:1 1 100%}}
 </style>
 </head>
@@ -96,7 +103,7 @@ code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;background:va
 
   <div class="card" id="contact">
     <h2>3. 聯絡資料（用網頁送出時必填）</h2>
-    <p class="small mut" style="margin-top:0">顧問會用這些資料聯絡您並寄回分析報告。若選擇「不上傳，下載回答檔」改用 Email 寄送，這一段可以不填。</p>
+    <p class="small mut" style="margin-top:0">顧問會用這些資料聯絡您並寄回分析報告。若選擇「不上傳，下載回答檔」改用 Email 寄送，這一段可以不填（回答檔已經包含健檢結果，只要寄這一個檔案）。</p>
     <div class="field"><label for="c_org">機關名稱<span class="req">*</span></label><input type="text" id="c_org" maxlength="60" autocomplete="organization"></div>
     <div class="field"><label for="c_unit">單位<span class="req">*</span></label><input type="text" id="c_unit" maxlength="60" placeholder="例：資訊室"></div>
     <div class="field"><label for="c_name">聯絡人<span class="req">*</span></label><input type="text" id="c_name" maxlength="40" autocomplete="name"></div>
@@ -128,6 +135,16 @@ code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;background:va
 </div>
 </div>
 
+<dialog class="modal" id="mailbox" aria-labelledby="mailtitle"><div class="in">
+  <h2 id="mailtitle">回答檔已下載</h2>
+  <p style="margin:0">檔名：<code id="mailfile"></code></p>
+  <p style="margin:12px 0 0">請把這個檔案寄到</p>
+  <a class="mail" id="maillink"></a>
+  <p style="margin:0">等候資安報告回覆。</p>
+  <p class="small mut" style="margin:10px 0 0">回答檔已經包含健檢結果，不用另外附 findings-ai 檔。瀏覽器沒有自動下載時，請檢查是否被擋下。</p>
+  <div class="acts"><button type="button" class="btn" id="mailok">知道了</button></div>
+</div></dialog>
+
 <div class="bar hidden" id="bar"><div class="in">
   <div class="msg" id="barmsg"></div>
   <button type="button" class="btn sec" id="dl">不上傳，下載回答檔</button>
@@ -137,7 +154,11 @@ code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;background:va
 <script>
 "use strict";
 // Google Apps Script 網址（部署後填入）。空字串時「送出」不能用，只能下載回答檔。
-var ENDPOINT = "https://script.google.com/macros/s/AKfycbwOn-MJNl6mPVnzxP3AGWGChZIeFQAih_ja3BFlZdBNwSmx_hHmKLFq2slNGEdr_jOK/exec";
+var ENDPOINT = "https://script.google.com/macros/s/AKfycbx8fWYKj93DtpVzdhWMj2lIIMs7uX6X-4rckz0yekRFbzn440Z0eZ9moet4ZYZ3NLXk/exec";
+// 只下載回答檔時，請客戶寄到這個信箱（會公開在 GitHub Pages 上）
+var CONSULTANT_EMAIL = "vincent.chen@datasitter.com";
+// 回答檔格式：/2 起把整份 findings-ai 內容放進 findings 欄位，客戶只要寄一個檔案
+var ANSWERS_SCHEMA = "offline-ubuntu-healthcheck-answers/2";
 
 // 題目與選項：與顧問端的分析規則使用同一份選項文字與題目條件，改這裡要通知顧問同步修改
 var Q = {
@@ -399,12 +420,13 @@ function buildAnswers(channel){
     return {tag:o.tag, os:o.os, asked:o.qs.length > 0, answers:out, unanswered_optional:missing, not_asked:skipped};
   });
   return {
-    schema:"offline-ubuntu-healthcheck-answers/1",
+    schema:ANSWERS_SCHEMA,
     submission_id:newId(), created_at:isoNow(), channel:channel,
-    findings_file:S.name, findings_sha256:S.sha,
+    findings_file:S.name, findings_sha256:S.sha,   // 原檔名與原檔指紋（判斷重複送件用）
     generated_at:String(S.data.generated_at || ""), tool_version:String(S.data.tool_version || ""), basis_month:String(S.data.basis_month || ""),
     labels:ORDER.reduce(function(m, k){ m[k] = Q[k].label; return m; }, {}),
-    hosts:hosts
+    hosts:hosts,
+    findings:S.data   // 整份健檢結果（findings-ai 檔的內容），放最後
   };
 }
 function download(name, text){
@@ -416,14 +438,23 @@ function done(html){
   var b = $("done"); b.innerHTML = html; b.classList.remove("hidden"); b.scrollIntoView({behavior:"smooth"});
 }
 function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function mailHref(ans, name){
+  return "mailto:" + CONSULTANT_EMAIL + "?subject=" + encodeURIComponent("主機資安健檢回答檔 " + ans.submission_id) +
+    "&body=" + encodeURIComponent("附件：" + name + "\n（請記得附上這個檔案）");
+}
 function saveAnswers(ans, why){
   var name = "answers-" + ans.submission_id + ".json";
   download(name, JSON.stringify(ans, null, 2));
   done((why ? '<div class="err">' + esc(why) + "</div>" : "") +
     '<div class="okbox"><b>回答檔已下載：</b><code>' + esc(name) + "</code></div>" +
-    "<p>請把下面兩個檔案一起用 Email 寄給健檢顧問：</p><ol><li><code>" + esc(S.name) + "</code>（健檢結果檔）</li><li><code>" + esc(name) + "</code>（剛下載的回答檔）</li></ol>" +
-    '<p class="small mut">回答檔只有各主機的答案與編號 ' + esc(ans.submission_id) + "，不含聯絡資料。瀏覽器沒有自動下載時，請檢查是否被擋下。</p>");
+    '<p>請把這個檔案寄到 <a href="' + esc(mailHref(ans, name)) + '"><b>' + esc(CONSULTANT_EMAIL) + "</b></a>，等候資安報告回覆。</p>" +
+    '<p class="small mut">回答檔已經包含健檢結果（' + esc(S.name) + "），不用另外附檔。檔案裡是去識別化的健檢結果、各主機的答案與編號 " + esc(ans.submission_id) + "，不含聯絡資料。瀏覽器沒有自動下載時，請檢查是否被擋下。</p>");
+  $("mailfile").textContent = name;
+  var a = $("maillink"); a.textContent = CONSULTANT_EMAIL; a.href = mailHref(ans, name);
+  var m = $("mailbox");
+  if (typeof m.showModal === "function"){ try { m.showModal(); } catch(e){} }
 }
+$("mailok").addEventListener("click", function(){ $("mailbox").close(); });
 
 $("dl").addEventListener("click", function(){
   if (stats().reqMiss) return;
@@ -434,7 +465,7 @@ $("send").addEventListener("click", function(){
   var btn = $("send"); btn.disabled = true; btn.textContent = "送出中…";
   var ans = buildAnswers("upload");
   var body = {
-    findings_name:S.name, findings_sha256:S.sha, findings:S.file, answers:ans,
+    answers:ans,   // 回答檔本身已內含健檢結果，收件端只存這一個檔
     contact:{org:$("c_org").value.trim(), unit:$("c_unit").value.trim(), name:$("c_name").value.trim(), email:$("c_email").value.trim(), tel:$("c_tel").value.trim(), consent:true},
     hp:$("c_web").value
   };
@@ -446,7 +477,7 @@ $("send").addEventListener("click", function(){
       clearTimeout(timer);
       if (!r || !r.ok){ var x = new Error((r && r.error) || "收件端沒有回應成功"); x.server = true; throw x; }
       btn.textContent = "已送出";
-      done('<div class="okbox"><b>已送出，謝謝您。</b></div><p>您的送件編號：<b style="font-size:18px">' + esc(r.id) + "</b></p>" +
+      done('<div class="okbox"><b>已收到，請等候資安報告回覆。</b></div><p>您的送件編號：<b style="font-size:18px">' + esc(r.id) + "</b></p>" +
         '<p class="small mut">請記下這個編號，聯絡顧問時提供即可。' + (r.duplicate ? "這份健檢結果檔先前已送出過，顧問會以最新一次的回答為準。" : "") + "</p>");
       document.querySelectorAll("input,button").forEach(function(x){ if (x.id !== "openall" && x.id !== "closeall") x.disabled = true; });
     })

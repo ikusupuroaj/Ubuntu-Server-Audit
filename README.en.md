@@ -41,7 +41,7 @@ It reads the fix pocket named in the official OVAL criteria (`esm-infra`, `esm-a
 ## More
 
 - `docs/user-guide.pdf`: step-by-step user guide, including how to read the report
-- `docs/upload/`: a questionnaire page (served by GitHub Pages) for sending `findings-ai-<timestamp>.json` with a short host-context questionnaire to the consultant. The file is read in the browser; host tags are H01, H02… and the mapping stays in the local report only.
+- `docs/upload/`: a questionnaire page (served by GitHub Pages) for sending `findings-ai-<timestamp>.json` with a short host-context questionnaire to the consultant. The file is read in the browser; host tags are H01, H02… and the mapping stays in the local report only. If you choose to download the answers file instead of uploading, it already contains the results, so email that single file.
 - `tests/lxd-quicktest.sh`: one-command test across Ubuntu releases in LXD VMs
 - `rules/default-rules.json`: categories, advice texts and thresholds; override with `--rules`
 - Critical and high advisories show an attack vector and the highest CVSS score, taken from the CVSS vectors in Canonical's OVAL data (CVSS 3.x and 4.0 mixed). It shows how an issue could be reached, not that it has been confirmed exploitable.

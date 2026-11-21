@@ -130,7 +130,7 @@ GitHub 上的資料由 GitHub Actions 每天從 Canonical 官方網站取得，�
 
 把這個檔交給健檢顧問，回答一份主機情境問卷，顧問會提供給主管看的報告。兩種交法：
 
-- **上傳網頁**：<https://ikusupuroaj.github.io/Ubuntu-Server-Audit/upload/>（原始檔在 `docs/upload/index.html`）。檔案在瀏覽器裡讀取，依每台主機勾選問卷後送出；也可以選「不上傳，下載回答檔」，再用 Email 寄出。
+- **上傳網頁**：<https://ikusupuroaj.github.io/Ubuntu-Server-Audit/upload/>（原始檔在 `docs/upload/index.html`）。檔案在瀏覽器裡讀取，依每台主機勾選問卷後送出；也可以選「不上傳，下載回答檔」，再用 Email 寄出（回答檔已經包含健檢結果，只要寄這一個檔）。
 - **Email**：直接把檔案寄給顧問，顧問會回信請你填問卷。
 
 做法見使用者手冊第 6 章。
