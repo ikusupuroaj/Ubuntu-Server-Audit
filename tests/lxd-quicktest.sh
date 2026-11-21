@@ -1,5 +1,5 @@
 #!/bin/bash
-# offline-ubuntu-healthcheck｜LXD 快速測試（tests/lxd-quicktest.sh）
+# Ubuntu-Server-Audit｜LXD 快速測試（tests/lxd-quicktest.sh）
 # 版本：0.6（2026-11-21：照客戶實際做法，每台測試機只用 sudo 收集一次，報告一台一列；不再測一般使用者）
 #
 # 在一台裝好 LXD 的 Ubuntu（例如 Desktop 26.04）上，一個指令完成：

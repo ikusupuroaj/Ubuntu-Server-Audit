@@ -1,10 +1,20 @@
-# offline-ubuntu-healthcheck
+# Ubuntu-Server-Audit
 
 An offline security health check for Ubuntu hosts.
 
 It tells you whether each host's release is still maintained, which security fixes are missing, and which of those gaps an Ubuntu Pro subscription would close. Matching uses **Canonical's official OVAL data**. Nothing is installed on the hosts being checked. Reports and the user guide ([docs/user-guide.pdf](docs/user-guide.pdf)) are written in Traditional Chinese.
 
 > This is not an official Canonical tool. It is not affiliated with or endorsed by Canonical. Ubuntu is a trademark of Canonical Ltd.
+
+## Workflow
+
+1. Download the tool to an analysis machine (Ubuntu or macOS; Windows is untested; Python 3.6+ with no extra packages).
+2. Scan your hosts with one command; results are matched against Canonical's official data.
+3. Open the HTML report in a browser.
+4. (Optional) Send the de-identified result to a health-check consultant through the questionnaire page.
+5. Receive a management report that ranks the work by each host's role.
+
+Run every command in a terminal, inside the `Ubuntu-Server-Audit` folder. `./hc -h` shows help and `./hc --version` shows the version.
 
 ## Quick start
 
@@ -21,9 +31,9 @@ A plain `git clone` also fetches the `data` branch, which GitHub Actions refresh
 | This machine can SSH to the hosts | `cp hosts.example.txt hosts.txt`, edit it, then `./hc scan hosts.txt` |
 | Host owners run the collector themselves | on the host: `sudo bash collect.sh --tag H01`; then `./hc report hc-H01-*.tar.gz` |
 
-`./hc scan` pipes the collector over SSH and streams the result back, so the collector and its output are never written on the host (the Ubuntu Pro client and sudo still write their own logs). Since 0.7.1, `hc local` and `hc scan` collect with sudo by default, which covers three extra checks (SSH config, ufw, empty passwords); add `--no-sudo` to skip sudo, and those three are listed as not checked. `hc local` asks for your sudo password; `hc scan` needs passwordless sudo on the hosts and otherwise falls back to a normal user. A collector file made with `sudo bash collect.sh` is owned by root: run `sudo chown $USER hc-H01-*.tar.gz` before copying it.
+`./hc scan` pipes the collector over SSH and streams the result back, so the collector and its output are never written on the host (the Ubuntu Pro client and sudo still write their own logs). `hc local` and `hc scan` collect with sudo by default, which covers three extra checks (SSH config, ufw, empty passwords); add `--no-sudo` to skip sudo, and those three are listed as not checked. `hc local` asks for your sudo password; `hc scan` needs passwordless sudo on the hosts and otherwise falls back to a normal user. A collector file made with `sudo bash collect.sh` is owned by root: run `sudo chown $USER hc-H01-*.tar.gz` before copying it.
 
-Open `report-<timestamp>.html` in a browser for the full report. Each run writes three files to `reports/<timestamp>/`: the report, `findings-ai-<timestamp>.json` (de-identified results to send to your consultant) and `oval-detail.json` (full matching details, keep it yourself).
+Open `report-<timestamp>.html` in a browser for the full report. Each run writes to `reports/<timestamp>/`: the report, `findings-ai-<timestamp>.json` (de-identified results, only needed if you use the consultant service), `oval-detail.json` (full matching details) and, for `local` and `scan`, `collected/` (raw data from the hosts, including package lists; do not send it out). With `report`, the `hc-*.tar.gz` bundles you copied in hold the same raw data. Keep the report and `collected/` according to your organization's data rules.
 
 ## OVAL data
 
@@ -41,7 +51,7 @@ It reads the fix pocket named in the official OVAL criteria (`esm-infra`, `esm-a
 ## More
 
 - `docs/user-guide.pdf`: step-by-step user guide, including how to read the report
-- `docs/upload/`: a questionnaire page (served by GitHub Pages) for sending `findings-ai-<timestamp>.json` with a short host-context questionnaire to the consultant. The file is read in the browser; host tags are H01, H02… and the mapping stays in the local report only. If you choose to download the answers file instead of uploading, it already contains the results, so email that single file.
+- `docs/upload/`: a questionnaire page (served by GitHub Pages) for sending `findings-ai-<timestamp>.json` with a short host-context questionnaire to the consultant. The file is read in the browser; host tags are H01, H02… and the mapping stays in the local report only. If you choose to download the answers file instead of uploading, it already contains the results, so email that single file. Check your organization's rules before sending results outside. Data sent to the consultant is deleted 90 days after the case is closed (the case is closed once the consultant has emailed the report and confirmed you received it).
 - `tests/lxd-quicktest.sh`: one-command test across Ubuntu releases in LXD VMs
 - `rules/default-rules.json`: categories, advice texts and thresholds; override with `--rules`
 - Critical and high advisories show an attack vector and the highest CVSS score, taken from the CVSS vectors in Canonical's OVAL data (CVSS 3.x and 4.0 mixed). It shows how an issue could be reached, not that it has been confirmed exploitable.

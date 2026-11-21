@@ -1,4 +1,4 @@
-# offline-ubuntu-healthcheck 官方弱點資料（data 分支）
+# Ubuntu-Server-Audit 官方弱點資料（data 分支）
 
 這個分支由 GitHub Actions 每天自動更新，只保留最新一份，不累積歷史。
 

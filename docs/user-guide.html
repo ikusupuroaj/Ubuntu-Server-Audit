@@ -22,6 +22,8 @@ table{border-collapse:collapse;width:100%;margin:10px 0 18px;font-size:13.5px}
 th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
 th{background:var(--card);font-weight:600}
 .tw{overflow-x:auto}
+.tw td:first-child code{white-space:nowrap}
+.tw.k1 td:first-child{white-space:nowrap}
 .note{background:var(--card);border-left:4px solid var(--mut);padding:10px 14px;border-radius:6px;margin:12px 0}
 .warn{background:var(--warn);border-left:4px solid var(--warnb);padding:10px 14px;border-radius:6px;margin:12px 0}
 .step{display:flex;gap:12px;margin:14px 0}
@@ -74,7 +76,7 @@ figure.arch ol.legend li{padding-left:1.6em;text-indent:-1.6em}
 
 <section class="cover">
   <h1>Ubuntu 主機資安健檢工具<br>使用者手冊</h1>
-  <p class="sub">offline-ubuntu-healthcheck 0.7.1</p>
+  <p class="sub">Ubuntu-Server-Audit 0.7.3</p>
   <p class="mut">2026 年 11 月</p>
   <p class="mut">工具下載：https://github.com/ikusupuroaj/Ubuntu-Server-Audit</p>
   <p class="mut" style="margin-top:40px">本工具不是 Canonical 的官方工具，與 Canonical 沒有隸屬關係，也沒有經過 Canonical 背書。Ubuntu 是 Canonical Ltd. 的商標。</p>
@@ -92,7 +94,7 @@ figure.arch ol.legend li{padding-left:1.6em;text-indent:-1.6em}
     <li>更新官方資料與常見問題</li>
     <li>附錄：指令速查</li>
   </ol>
-  <p>第一次用，建議照第 2 章到第 5 章的順序做一遍。之後只要翻第 4 章與附錄的指令。</p>
+  <p>第一次用，建議照第 2 章到第 6 章的順序做一遍（第 6 章是選用的顧問服務）。之後只要翻第 4 章與附錄的指令。不懂的詞先看第 1 章最後的「先認識幾個詞」。</p>
 </section>
 
 <h2>1. 這個工具做什麼</h2>
@@ -101,12 +103,13 @@ figure.arch ol.legend li{padding-left:1.6em;text-indent:-1.6em}
 <ol>
   <li>主機的版本還有沒有官方維護。</li>
   <li>缺了哪些安全修補。</li>
-  <li>哪些缺口訂閱 Ubuntu Pro 就能補上，哪些跟 Ubuntu Pro 無關、要自己處理。</li>
+  <li>哪些更新要訂閱 Ubuntu Pro 才拿得到，哪些跟 Ubuntu Pro 無關、要自己處理。</li>
 </ol>
 <p>比對用的是 Canonical 官方公開的 OVAL 弱點資料。受檢主機上不必安裝任何東西，也不需要連網。</p>
 
 <h3>整個流程</h3>
 <div class="flow"><span>① 準備分析電腦</span>→<span>② 準備主機清單</span>→<span>③ 收集並產生報告</span>→<span>④ 看報告</span>→<span>⑤（選用）交給顧問分析</span></div>
+<p>①～④ 都在你自己的電腦上完成，報告本身就列出了要做的事。⑤ 是選用的顧問服務：想知道「依每台主機的用途，哪些該先做、建議幾天內完成」，或需要一份給主管看的報告時再用（第 6 章）。</p>
 <p>各步驟在哪台電腦上做、資料怎麼流動，請看第 2 章的圖 1（下載與更新）和第 4 章的圖 2（掃描主機）。</p>
 
 <h3>會做與不會做的事</h3>
@@ -116,16 +119,42 @@ figure.arch ol.legend li{padding-left:1.6em;text-indent:-1.6em}
 <tr><td>在你的電腦上比對官方弱點資料，產生報告</td><td>不收集主機名稱、IP、密碼、金鑰、使用者家目錄、防火牆規則、Pro 的帳號與合約資訊</td></tr>
 </table></div>
 
+<h3>先認識幾個詞</h3>
+<div class="tw"><table>
+<tr><th>詞</th><th>意思</th></tr>
+<tr><td>終端機</td><td>輸入指令的視窗。Ubuntu 按 Ctrl＋Alt＋T 打開；macOS 在「應用程式／工具程式」裡找「終端機」。本手冊灰底的指令都打在這裡，打完按 Enter</td></tr>
+<tr><td>SSH</td><td>從一台電腦遠端登入另一台主機的方式，例如 <code>ssh admin@10.0.0.5</code></td></tr>
+<tr><td>SSH 金鑰</td><td>免打密碼的登入憑證，分成留在自己電腦的「私鑰」和放到主機上的「公鑰」（3.2 節）</td></tr>
+<tr><td>sudo</td><td>用系統管理員權限執行指令，會詢問你自己帳號的密碼。<b>打密碼時畫面不會顯示任何字，是正常的</b>，打完按 Enter</td></tr>
+<tr><td>免密碼 sudo</td><td>主機管理者事先設定好，這個帳號用 sudo 時不必再打密碼。<code>./hc scan</code> 逐台自動收集時需要（3.3 節）</td></tr>
+<tr><td>git、git clone</td><td>從 GitHub 下載、更新程式的工具。<code>git clone</code> 是第一次下載，<code>git pull</code> 是之後更新</td></tr>
+<tr><td>LTS</td><td>Ubuntu 的長期支援版本，例如 20.04、22.04、24.04</td></tr>
+<tr><td>官方弱點資料（OVAL）</td><td>Canonical 公布的「哪個套件版本有安全問題、要更新到哪一版」清單，工具用它比對主機</td></tr>
+<tr><td>安全公告（USN）</td><td>Ubuntu 安全公告（Ubuntu Security Notice），一則公告對應一次安全更新，編號像 <code>USN-9022-1</code></td></tr>
+<tr><td>CVE、CVSS</td><td>CVE 是國際通用的弱點編號；CVSS 是弱點的嚴重程度分數（0～10）</td></tr>
+<tr><td>維護期</td><td>Ubuntu LTS 分三層：標準維護 5 年（只涵蓋 Main 套件庫，免費）；訂閱 Ubuntu Pro 可延長到 10 年（ESM，延伸安全維護，並涵蓋 Universe 套件庫）；再加購 Legacy 最長到 15 年</td></tr>
+<tr><td>Ubuntu Pro</td><td>Canonical 的付費維護服務，內含 ESM、Livepatch、USG 等功能</td></tr>
+<tr><td>Livepatch</td><td>不必重新開機就能套用部分重要核心修補的功能（Ubuntu Pro 內含）</td></tr>
+<tr><td>CIS、DISA-STIG、USG</td><td>CIS、DISA-STIG 是政府與產業常用的主機安全設定基準；USG（Ubuntu Security Guide）是 Ubuntu Pro 內含、自動檢查這些基準的工具</td></tr>
+<tr><td><code>.tar.gz</code></td><td>壓縮檔。收集檔交回分析時不用解開</td></tr>
+</table></div>
+
 <h2>2. 準備分析用的電腦</h2>
 
 <p>「分析用的電腦」是你拿來執行工具、產生報告的那台。它要能用 SSH 連到受檢主機；連不到也沒關係，可以改請主機管理者自己收集（第 4 章情況三）。只檢查分析電腦自己的話，也不需要 SSH（第 4 章情況一）。</p>
 
 <h3>2.1 需要什麼</h3>
 <ul>
-  <li>Ubuntu 或 macOS。Windows 目前沒有實測。</li>
-  <li>Python 3.6 以上（Ubuntu 與 macOS 通常已內建），不必另外安裝套件。</li>
-  <li><code>git</code>（建議）與 <code>ssh</code>。</li>
+  <li><b>作業系統</b>：Ubuntu 或 macOS。Windows 目前沒有實測。</li>
+  <li><b>Python 3.6 以上</b>：工具本身是 Python 寫的（Ubuntu 與 macOS 通常已內建），不必另外安裝套件。</li>
+  <li><b>git</b>（建議）：用來下載與更新工具。沒有也可以，改下載壓縮檔（2.2 節）。</li>
+  <li><b>ssh</b>：用來連到受檢主機（Ubuntu 與 macOS 都已內建）。只檢查分析電腦自己時用不到。</li>
 </ul>
+<p>打開終端機，用下面的指令確認，每行都印出版本號就表示有裝：</p>
+<pre>python3 --version
+git --version
+ssh -V</pre>
+<p>Ubuntu 上缺 git 時，用 <code>sudo apt install -y git</code> 安裝；macOS 第一次執行 <code>git</code> 時，會跳出視窗詢問要不要安裝開發者工具，按「安裝」即可。</p>
 
 <h3>2.2 下載工具</h3>
 
@@ -213,12 +242,12 @@ cd Ubuntu-Server-Audit</pre>
 <p>到客戶現場或封閉網路做健檢，進場前在能上網的地方做這三件事：</p>
 <div class="step"><b class="n">1</b><div><p>更新到最新資料。能連到 Canonical 官方網站時：</p><pre>./hc update</pre><p>連不到官方網站、但能連 GitHub 時，改用：</p><pre>git pull</pre></div></div>
 <div class="step"><b class="n">2</b><div><p>確認日期在 7 天內：</p><pre>./hc update --list</pre></div></div>
-<div class="step"><b class="n">3</b><div><p>整個 <code>Ubuntu-Server-Audit</code> 資料夾帶進去後，先核對檔案沒被改過或損毀：</p><pre>./hc update --verify</pre><p>每一行都是「一致」才算正常。</p></div></div>
+<div class="step"><b class="n">3</b><div><p>依機關規定，把整個 <code>Ubuntu-Server-Audit</code> 資料夾用隨身碟或內部檔案傳輸帶進去。帶進去後，先在資料夾裡核對檔案沒被改過或損毀：</p><pre>./hc update --verify</pre><p>每一行都是「一致」才算正常。</p></div></div>
 
 <div class="note">資料超過 7 天也能分析，只是之後才公布的弱點不會列入。工具在開始收集前會提醒你。</div>
 
 <h3>2.4（選用）安裝 OpenSCAP</h3>
-<p>工具內建比對功能，不裝也能用。分析電腦是 Ubuntu 的話，可以加裝 Canonical 文件示範的比對工具 OpenSCAP，裝了之後會自動改用它：</p>
+<p>工具內建比對功能，不裝也能用。分析電腦是 Ubuntu 的話，可以加裝 Canonical 文件示範的比對工具 OpenSCAP，裝了之後會自動改用它（指令開頭的 <code>sudo</code> 會詢問你的密碼，見第 1 章「先認識幾個詞」）：</p>
 <pre>sudo apt install -y openscap-scanner    # 24.04 以後
 sudo apt install -y libopenscap8        # 22.04 以前</pre>
 
@@ -228,7 +257,7 @@ sudo apt install -y libopenscap8        # 22.04 以前</pre>
 <h3>3.1 建立主機清單 hosts.txt</h3>
 <div class="step"><b class="n">1</b><div><p>從範本複製一份：</p><pre>cp hosts.example.txt hosts.txt</pre></div></div>
 <div class="step"><b class="n">2</b><div>
-<p>用文字編輯器打開 <code>hosts.txt</code>，每行寫一台主機：「代號、空白、帳號@IP」。</p>
+<p>用文字編輯器打開 <code>hosts.txt</code>，每行寫一台主機：「代號、空白、帳號@IP」。不知道用哪個編輯器的話，在終端機輸入 <code>nano hosts.txt</code>，改完按 Ctrl＋O、Enter 存檔，再按 Ctrl＋X 離開。</p>
 <pre>H01   admin@10.0.0.5
 H02   ops@10.0.0.6     -p 2222</pre>
 <ul>
@@ -240,22 +269,34 @@ H02   ops@10.0.0.6     -p 2222</pre>
 <div class="note">報告上只會出現代號，不會出現 IP。<code>hosts.txt</code> 記著代號與 IP 的對照，請留在受檢單位，不要隨報告交出去。</div>
 
 <h3>3.2 設定免密碼登入（SSH 金鑰）</h3>
-<p>工具會逐台自動登入，所以要先讓分析電腦不用輸入密碼就能登入每台主機。</p>
-<div class="step"><b class="n">1</b><div><p>看看分析電腦有沒有金鑰：</p><pre>ls ~/.ssh/id_*.pub</pre><p>出現 <code>No such file</code> 代表沒有，用下面的指令建立一把，問題都直接按 Enter：</p><pre>ssh-keygen -t ed25519</pre></div></div>
+<p>工具會逐台自動登入，所以要先讓分析電腦不用輸入密碼就能登入每台主機。做法是用 SSH 金鑰：在分析電腦建立一組「私鑰＋公鑰」，把公鑰放到主機上，之後登入就不必打密碼。私鑰只留在分析電腦，不要交給任何人。</p>
+<div class="step"><b class="n">1</b><div><p>看看分析電腦有沒有金鑰：</p><pre>ls ~/.ssh/id_*.pub</pre><p>出現 <code>No such file</code> 代表沒有，用下面的指令建立一把，問題都直接按 Enter：</p><pre>ssh-keygen -t ed25519</pre><p>它會問三個問題：存放位置（直接按 Enter 用預設）、passphrase 與再確認一次（直接按 Enter 代表不另設保護密碼；單位規定要設的話照規定設，之後每次使用會要求輸入）。</p></div></div>
 <div class="step"><b class="n">2</b><div><p>把公鑰放到每台主機上，這一步會問一次那台主機的密碼：</p><pre>ssh-copy-id admin@10.0.0.5</pre></div></div>
 <div class="step"><b class="n">3</b><div><p>確認可以免密碼登入，看到 <code>OK</code> 就成功了：</p><pre>ssh admin@10.0.0.5 'echo OK'</pre><p>第一次連線會問要不要信任這台主機，確認 IP 沒錯後回答 <code>yes</code>。</p></div></div>
 
 <h3>3.3 要不要用 sudo</h3>
 <p>工具預設用 sudo 收集。版本、套件、核心與 Ubuntu Pro 狀態用一般權限就能檢查；SSH 設定、防火牆、空密碼帳號這三項要用 sudo 才看得到。</p>
-<p><code>./hc scan</code> 需要主機上的帳號可以「免密碼 sudo」。不行的話，工具會自動改用一般權限，那三項在報告上列為「未能檢查」，不會被當成沒問題。不想用 sudo 時，加上 <code>--no-sudo</code>。</p>
+<p><code>./hc scan</code> 會逐台自動收集，沒辦法停下來等你打密碼，所以主機上的帳號要能「免密碼 sudo」。這要請主機管理者依單位規定設定；不方便設定的話，有兩個選擇：</p>
+<ul>
+  <li>照樣執行 <code>./hc scan</code>：工具會自動改用一般權限，那三項在報告上列為「未能檢查」，不會被當成沒問題。</li>
+  <li>改用第 4 章情況三，請管理者自己用 sudo 收集，就能檢查全部項目。</li>
+</ul>
+<p>不想用 sudo 時，加上 <code>--no-sudo</code>。</p>
 
 <h2>4. 收集資料並產生報告</h2>
 <p>依你的情況選一種。三種做法只要都用 sudo 收集，產生的報告完全一樣。</p>
 
 <h3>情況一：只想檢查分析電腦自己</h3>
 <p>要檢查的 Ubuntu 主機就是你正在用的這台。收集和分析都在這台完成，不需要 SSH，也不需要第 3 章的主機清單。</p>
-<pre>./hc local</pre>
-<p>執行時會詢問你這個帳號的 sudo 密碼。加上 <code>--no-sudo</code> 就不用 sudo，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p>
+<p>打開終端機，先進到工具資料夾，再執行：</p>
+<pre>cd Ubuntu-Server-Audit
+./hc local</pre>
+<p>執行時會詢問一次你這個帳號的 sudo 密碼（打字時畫面不會顯示，打完按 Enter）。跑完時畫面最後幾行會像這樣，照著用瀏覽器打開那個 html 檔：</p>
+<pre class="out">報告：reports/2026-11-21-224410/report-20261121-224410.html　← 用瀏覽器打開
+完整明細：oval-detail.json（自己留存即可，不必寄出）
+怎麼看報告：使用者手冊 docs/user-guide.pdf 第 5 章
+交給顧問：reports/2026-11-21-224410/findings-ai-20261121-224410.json（已去識別化…）</pre>
+<p>加上 <code>--no-sudo</code> 就不用 sudo，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p>
 <p>只有分析電腦本身是 Ubuntu 時才能用。macOS 沒有 Ubuntu 的套件清單，可以用來掃別台主機，但不能掃自己。</p>
 
 <h3>情況二：分析電腦能用 SSH 連到主機（多台主機時建議）</h3>
@@ -271,10 +312,13 @@ H02   ops@10.0.0.6     -p 2222</pre>
 A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決）　C＝合規工具　D＝與 Pro 無關
 官方資料：focal（20.04），產生於 2026-11-15（1 天前），雜湊核對：一致
 
-報告：reports/2026-11-16-151406/report-20261116-151406.html　← 用瀏覽器打開</pre>
-<p>這段畫面的意思：H01 是 20.04，標準維護期已經過了；有 178 則安全公告的修補要訂閱 Ubuntu Pro 才拿得到，另外 3 則是免費的、只是還沒裝。A、B、C、D 是發現事項的類別，第 5 章會詳細說明。</p>
+報告：reports/2026-11-16-151406/report-20261116-151406.html　← 用瀏覽器打開
+完整明細：oval-detail.json（自己留存即可，不必寄出）
+怎麼看報告：使用者手冊 docs/user-guide.pdf 第 5 章
+交給顧問：reports/2026-11-16-151406/findings-ai-20261116-151406.json（已去識別化…）</pre>
+<p>這段畫面的意思：H01 是 20.04，標準維護期已經過了，所以維護狀態寫「需 Pro（ESM）」，ESM 是訂閱 Ubuntu Pro 後的延伸安全維護。有 178 則安全公告的修補要訂閱 Ubuntu Pro 才拿得到，另外 3 則是免費的、只是還沒裝。A、B、C、D 是發現事項的類別，第 5 章會詳細說明；Livepatch 等名詞見第 1 章「先認識幾個詞」。</p>
 </div></div>
-<div class="step"><b class="n">3</b><div><p>用瀏覽器打開最後一行的報告檔（<code>report-日期時間.html</code>）。</p></div></div>
+<div class="step"><b class="n">3</b><div><p>用瀏覽器打開「報告：」那一行的報告檔（<code>report-日期時間.html</code>）。</p></div></div>
 
 <figure class="arch">
 <div class="keep">
@@ -308,7 +352,7 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 <rect class="wb" x="40" y="290" width="220" height="54" rx="6"/>
 <circle class="bd" cx="56" cy="317" r="10"/><text class="bn" x="56" y="321" text-anchor="middle">6</text>
 <text class="c" x="72" y="306">reports/日期時間/</text>
-<text class="s" x="72" y="322">report-….html、findings-ai-….json</text>
+<text class="s" x="72" y="322">報告、findings-ai 檔</text>
 <text class="s" x="72" y="337">collected/（收集到的資料）</text>
 <path class="ln" d="M150 344V375" marker-end="url(#ah2)"/>
 <rect class="hl" x="28" y="378" width="244" height="44" rx="8"/>
@@ -354,12 +398,11 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 </ol>
 </figure>
 
-<p>收集時，腳本經 SSH 送進主機執行，結果直接傳回分析電腦。主機上不會留下收集腳本或收集檔。</p>
-
 <h3>情況三：只能請主機管理者自己收集</h3>
-<div class="step"><b class="n">1</b><div><p>把 <code>collect.sh</code> 這個檔案交給主機管理者（隨身碟、內部檔案分享都可以）。</p></div></div>
-<div class="step"><b class="n">2</b><div><p>請管理者在主機上執行，<code>H01</code> 換成這台的代號：</p><pre>sudo bash collect.sh --tag H01</pre><p>沒有 sudo 權限時改用 <code>bash collect.sh --tag H01</code>，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p><p>完成後，目前的資料夾會多一個 <code>hc-H01-日期時間.tar.gz</code>。</p><p>用 sudo 產生的檔案屬於 root，只有 root 能讀。複製出來之前，先把檔案的擁有者改成自己：</p><pre>sudo chown $USER hc-H01-*.tar.gz</pre></div></div>
-<div class="step"><b class="n">3</b><div><p>管理者把這個檔案交回給你。你在分析電腦上執行：</p><pre>./hc report hc-H01-*.tar.gz</pre><p>多台一起分析，就把檔案都列上去，或用 <code>./hc report hc-*.tar.gz</code>。</p></div></div>
+<div class="step"><b class="n">1</b><div><p>把 <code>collect.sh</code> 這個檔案交給主機管理者。它就在 <code>Ubuntu-Server-Audit</code> 資料夾的最上層，用隨身碟或內部檔案分享都可以。</p></div></div>
+<div class="step"><b class="n">2</b><div><p>請管理者在主機上執行，<code>H01</code> 換成這台的代號：</p><pre>sudo bash collect.sh --tag H01</pre><p>沒有 sudo 權限時改用 <code>bash collect.sh --tag H01</code>，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p><p>完成後，目前的資料夾會多一個 <code>hc-H01-日期時間.tar.gz</code>。</p><p>用 sudo 產生的檔案只有系統管理員能讀，一般帳號複製不出來。先執行下面這行把檔案改成自己的，才複製得出來：</p><pre>sudo chown $USER hc-H01-*.tar.gz</pre><p>再把這個檔案複製出來：用隨身碟，或從分析電腦用 <code>scp admin@10.0.0.5:hc-H01-*.tar.gz .</code> 取回（<code>scp</code> 是經 SSH 複製檔案的指令，最後的點代表「放到目前的資料夾」）。</p></div></div>
+<div class="step"><b class="n">3</b><div><p>把收集檔放進分析電腦的 <code>Ubuntu-Server-Audit</code> 資料夾（不用解壓縮），在資料夾裡執行：</p><pre>./hc report hc-H01-*.tar.gz</pre><p>多台一起分析，就把檔案都列上去，或用 <code>./hc report hc-*.tar.gz</code>。跑完時畫面最後會印出報告的位置，和情況一相同。</p></div></div>
+<div class="step"><b class="n">4</b><div><p>分析完，請管理者刪除主機上的 <code>collect.sh</code> 與 <code>hc-*.tar.gz</code>。</p></div></div>
 
 <h3>4.1 報告表頭與去識別化</h3>
 <p>這些參數三種情況都能加：</p>
@@ -379,17 +422,18 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 <p>每次分析都會在 <code>reports/日期時間/</code> 產生下面這些檔案。檔名裡的日期時間是分析當下的時間（YYYYMMDD-HHMMSS），和資料夾名稱一致，方便分辨是哪一次的結果：</p>
 <div class="tw"><table>
 <tr><th>檔案</th><th>用途</th></tr>
-<tr><td><code>report-日期時間.html</code></td><td>報告，用瀏覽器打開，自己看或交付</td></tr>
+<tr><td><code>report-日期時間.html</code></td><td>報告，用瀏覽器打開。自己看；要給主管或維護廠商時，依單位規定</td></tr>
 <tr><td><code>findings-ai-日期時間.json</code></td><td>去識別化的結構化結果，<b>交給顧問分析時只要這個檔</b>（第 6 章）。主機代號改成 H01、H02…，收集時間只留日期，不含受檢單位名稱</td></tr>
 <tr><td><code>oval-detail.json</code></td><td>每則安全公告的完整比對明細，自己留存即可，不必交給顧問</td></tr>
-<tr><td><code>collected/</code></td><td>收集到的原始資料，含套件清單，請依單位的資料分級規定保管</td></tr>
+<tr><td><code>collected/</code></td><td>收集到的原始資料，含套件清單，請依單位的資料分級規定保管，不要交出去。只有情況一、二會產生；情況三的原始資料就是你放進工具資料夾的 <code>hc-*.tar.gz</code></td></tr>
 </table></div>
+<p>報告、<code>collected/</code> 與 <code>hc-*.tar.gz</code> 收集檔裡都有主機的套件與設定資訊。請依單位的資料分級規定保管；確定不需要時，可以把整個 <code>reports/日期時間/</code> 資料夾與收集檔刪掉。</p>
 
 <h3>4.3 主機上會留下什麼</h3>
 <p>用情況二（<code>./hc scan</code>）收集時，主機上不會留下收集腳本與收集檔。用情況三時，主機上會有 <code>collect.sh</code> 和產生的 <code>hc-*.tar.gz</code>，交回後請主機管理者刪除。用情況一時，收集檔只存在分析電腦的 <code>reports/日期時間/collected/</code>。</p>
 <p>不論哪種做法，2026 年 11 月的實機測試發現，收集時其他程式會寫自己的紀錄：</p>
 <ul>
-  <li>Ubuntu Pro 用戶端（<code>pro</code> 指令）會更新自己的記錄檔與快取。</li>
+  <li>Ubuntu Pro 工具（<code>pro</code> 指令）會更新自己的紀錄檔與快取。</li>
   <li>SSH 登入與 sudo 會寫進系統的登入紀錄（<code>auth.log</code>、journal）。受檢單位事後可以從這些紀錄查到誰在什麼時候檢查過。</li>
 </ul>
 
@@ -404,7 +448,7 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 <tr><td><span class="tag tA">A</span></td><td>修補拿不到：官方的修補只放在延伸維護（esm-infra、esm-apps），沒訂閱的主機用 apt 也裝不到</td><td>能</td><td>訂閱 Ubuntu Pro；同時規劃升級版本</td></tr>
 <tr><td><span class="tag tB">B</span></td><td>修補要重開機才生效：裝了新核心卻沒重開機、很久沒重開機</td><td>部分</td><td>排定重開機；停機困難時評估 Livepatch（只處理高風險核心漏洞）</td></tr>
 <tr><td><span class="tag tC">C</span></td><td>沒有用 CIS／DISA-STIG 的自動稽核工具</td><td>部分</td><td>需要稽核證據時評估 USG，仍要人設定</td></tr>
-<tr><td><span class="tag tD">D</span></td><td>跟 Ubuntu Pro 無關：免費修補沒裝、SSH 與帳號設定等</td><td>不能</td><td>機關資訊人員或維護廠商自己處理，多半當天就能做</td></tr>
+<tr><td><span class="tag tD">D</span></td><td>跟 Ubuntu Pro 無關：免費修補沒裝、SSH 與帳號設定等</td><td>不能</td><td>機關資訊人員或維護廠商自己處理，不需要採購</td></tr>
 </table></div>
 <p>「需不需要 Pro」是看官方資料寫的修補來源，不是從版本號推測。</p>
 
@@ -412,7 +456,8 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 <img src="images/report-overview.png" alt="報告的主機總覽表">
 <div class="tw"><table>
 <tr><th>欄位</th><th>怎麼看</th></tr>
-<tr><td>維護狀態</td><td>「標準維護期內」不用擔心；「需 Pro（ESM）」代表標準維護已結束，要訂閱才有安全更新；「需 Pro＋Legacy」代表連 ESM 也結束了；「已無維護」只能升級</td></tr>
+<tr><td>維護狀態</td><td>「標準維護期內」代表免費就能拿到安全更新；「需 Pro（ESM）」代表標準維護已結束，要訂閱才有安全更新；「需 Pro＋Legacy」代表連 ESM 也結束了；「已無維護」只能升級</td></tr>
+<tr><td>版本、執行中核心</td><td>Ubuntu 版本，以及主機現在實際在跑的核心版本。已經裝了新核心、這裡卻還是舊的，代表要重新開機才會生效（B 類）</td></tr>
 <tr><td>A、B、C、D</td><td>各類發現的項數</td></tr>
 <tr><td>需 Pro 才能取得的修補</td><td>要訂閱才拿得到的安全公告則數</td></tr>
 <tr><td>未套用的免費修補</td><td>免費、但還沒裝的安全公告則數。這個數字大，代表例行修補沒有在做</td></tr>
@@ -435,8 +480,8 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 <h3>5.4 每一種發現代表什麼、怎麼處理</h3>
 <div class="tw"><table>
 <tr><th>報告上的寫法</th><th>類別</th><th>代表什麼</th><th>怎麼處理</th></tr>
-<tr><td>作業系統已過標準維護期</td><td>A</td><td>版本已過 5 年標準維護，沒訂閱就沒有安全更新</td><td>訂閱 Ubuntu Pro 並啟用 esm-infra；同時規劃升級</td></tr>
-<tr><td>作業系統已過 ESM 期限</td><td>A</td><td>連 10 年的 ESM 也結束了</td><td>Ubuntu Pro 加購 Legacy 當過渡，盡快升級</td></tr>
+<tr><td>作業系統已過標準維護期</td><td>A</td><td>版本已過標準維護 5 年（標準維護只涵蓋 Main 套件庫），沒訂閱就沒有安全更新</td><td>訂閱 Ubuntu Pro 並啟用 esm-infra；同時規劃升級</td></tr>
+<tr><td>作業系統已過 ESM 期限</td><td>A</td><td>連 Ubuntu Pro 的延伸維護（ESM，到第 10 年，含 Universe 套件庫）也結束了</td><td>Ubuntu Pro 再加購 Legacy（最長到第 15 年）當過渡，盡快升級</td></tr>
 <tr><td>作業系統已無官方安全維護</td><td>D</td><td>所有維護都結束，或不是 LTS 版本</td><td>升級到仍在維護期內的 LTS 版本</td></tr>
 <tr><td>N 個套件的安全修補，要訂閱 Ubuntu Pro 才拿得到</td><td>A</td><td>這些套件的修補只放在延伸維護</td><td>訂閱後執行 <code>sudo pro attach</code> 註冊，再執行 <code>sudo apt update</code> 與 <code>sudo apt upgrade</code></td></tr>
 <tr><td>N 個套件有免費的安全修補，還沒安裝</td><td>D</td><td>修補已經在 Ubuntu 一般的更新來源，只是沒裝</td><td>執行 <code>sudo apt update</code> 與 <code>sudo apt upgrade</code>；包含核心時要重開機</td></tr>
@@ -444,7 +489,7 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 <tr><td>已安裝新核心，但機器還在跑舊核心</td><td>B</td><td>核心修補要重開機才生效</td><td>排定時段重開機；停機困難時評估 Livepatch</td></tr>
 <tr><td>系統標示需要重開機</td><td>B</td><td>有更新在等重開機</td><td>排定時段重開機</td></tr>
 <tr><td>已連續運作 N 天沒有重開機</td><td>B</td><td>核心修補很可能沒有生效</td><td>確認停機限制，保留定期重開機的時段</td></tr>
-<tr><td>未使用 CIS／DISA-STIG 基準的自動化稽核工具</td><td>C</td><td>沒有安裝 Ubuntu Security Guide（USG）</td><td>需要設定基準的稽核證據時評估 USG</td></tr>
+<tr><td>未使用 CIS／DISA-STIG 基準的自動化稽核工具</td><td>C</td><td>沒有安裝 Ubuntu Security Guide（USG）。CIS、DISA-STIG 是政府與產業常用的主機安全設定基準，USG 是 Ubuntu Pro 內含、自動檢查這些基準的工具</td><td>需要設定基準的稽核證據時評估 USG</td></tr>
 <tr><td>SSH 允許 root 直接登入</td><td>D</td><td>root 帳號可以直接從網路登入</td><td>把 <code>PermitRootLogin</code> 改成 <code>no</code>，再執行 <code>sudo systemctl reload ssh</code></td></tr>
 <tr><td>SSH 允許空密碼登入</td><td>D</td><td>沒設密碼的帳號也能登入</td><td>把 <code>PermitEmptyPasswords</code> 改成 <code>no</code>，再 reload</td></tr>
 <tr><td>SSH 允許密碼登入</td><td>D</td><td>帳號可能被猜密碼</td><td>確認每位管理者都能用金鑰登入後，把 <code>PasswordAuthentication</code> 改成 <code>no</code></td></tr>
@@ -482,7 +527,7 @@ sudo apt upgrade</pre>
 <h3>5.7 重大與高風險公告：只先修這幾則</h3>
 <p>有重大或高風險的安全公告時，每台主機的發現事項表下方會列出這些公告，並附上「只修這一則」的指令：</p>
 <ul>
-  <li><code>sudo pro fix USN-編號</code>：主機能連到 Canonical，或機關內部有 Landscape 離線（air-gapped）環境時使用。</li>
+  <li><code>sudo pro fix USN-編號</code>（USN 是 Ubuntu 安全公告的編號）：主機能連到 Canonical，或機關內部架了 Landscape 離線環境（Canonical 的主機管理系統，可在不連外的網路裡提供更新）時使用。</li>
   <li><code>sudo apt update &amp;&amp; sudo apt install --only-upgrade 套件…</code>：只升級這則公告點名、而且主機上真的有裝的套件。上面那種不能用時改用這行。</li>
   <li>核心公告合併成一列：新核心是不同的套件名稱，要用 <code>sudo apt update</code> 與 <code>sudo apt upgrade</code> 安裝，再重開機；停機困難時評估 Livepatch。</li>
   <li>寫「要先訂閱 Ubuntu Pro」的，修補只放在延伸維護，要先訂閱並執行 <code>sudo pro attach</code>。</li>
@@ -501,16 +546,17 @@ sudo apt upgrade</pre>
 </ul>
 
 <h2>6. 交給顧問分析</h2>
-<p>報告列出了每台主機還沒裝的更新與設定問題，但看不到主機做什麼用、誰連得到，所以排不出最合適的處理順序。把去識別化的結果檔交給健檢顧問，再回答一份主機情境問卷，顧問會依您的情況提供給主管看的報告：整體建議、請主管決定的事、各主機狀況、建議處理時程與 Ubuntu Pro 評估，可以存成 PDF，也可以直接截圖放進簡報。</p>
+<p>報告列出了每台主機還沒裝的更新與設定問題，但看不到主機做什麼用、誰連得到，所以排不出最合適的處理順序。把去識別化的結果檔交給健檢顧問，再回答一份主機情境問卷，顧問會依你的情況提供一份給主管看的報告，內容包括整體建議、請主管決定的事、各主機狀況、建議處理時程與 Ubuntu Pro 評估。報告可以存成 PDF，也可以直接截圖放進簡報。</p>
 
 <h3>6.1 先確認兩件事</h3>
 <div class="step"><b class="n">1</b><div><p><b>確認單位規定</b>：先問資訊單位能不能把去識別化的健檢結果交給外部顧問。</p></div></div>
-<div class="step"><b class="n">2</b><div><p><b>找到要交的檔案</b>：報告資料夾裡的 <code>findings-ai-日期時間.json</code>。主機代號已經改成 H01、H02…，不含受檢單位名稱，收集時間只留日期。報告檔與 <code>oval-detail.json</code> 自己留著，不必交。</p>
-<p>顧問的報告會寫 H01、H02，用報告主機總覽的「交件代號」欄對回原本的主機。</p></div></div>
+<div class="step"><b class="n">2</b><div><p><b>找到要交的檔案</b>：報告資料夾 <code>reports/日期時間/</code> 裡的 <code>findings-ai-日期時間.json</code>。主機代號已經改成 H01、H02…，不含受檢單位名稱，收集時間只留日期。報告檔與 <code>oval-detail.json</code> 自己留著，不必交。</p>
+<p>顧問的報告會寫 H01、H02，用報告主機總覽的「交件代號」欄對回原本的主機。</p>
+<p>分析電腦在封閉環境、不能上網時，依機關規定用隨身碟把這個檔案複製到能上網的電腦，再進行下一步。</p></div></div>
 
 <h3>6.2 做法一：用上傳網頁（建議）</h3>
 <p>網址：<code>https://ikusupuroaj.github.io/Ubuntu-Server-Audit/upload/</code></p>
-<div class="step"><b class="n">1</b><div><p>用瀏覽器打開上傳網頁，選擇 <code>findings-ai-日期時間.json</code>。檔案只在您的瀏覽器裡讀取，按下最後的「送出」之前不會傳到任何地方。</p></div></div>
+<div class="step"><b class="n">1</b><div><p>用瀏覽器打開上傳網頁，選擇 <code>findings-ai-日期時間.json</code>。檔案只在你的瀏覽器裡讀取，按下最後的「送出」之前不會傳到任何地方。</p></div></div>
 <div class="step"><b class="n">2</b><div><p>每台主機一個區塊，點標題可以展開或收合。依實際情況勾選：</p>
 <ul>
   <li><b>必答</b>（標 <span style="color:#c62828">*</span>）：用途、可達性、重要性。沒答完不能送出，按下方的「前往未答的題目」可以直接跳過去。</li>
@@ -525,16 +571,25 @@ sudo apt upgrade</pre>
 <h3>6.3 做法二：用 Email 寄給顧問</h3>
 <ul>
   <li><b>先填問卷再寄</b>：照做法一打開上傳網頁、選檔、勾選，最後按「不上傳，下載回答檔」，會下載 <code>answers-送件編號.json</code>，畫面會跳出顧問的 Email。回答檔已經包含健檢結果，只要把這一個檔寄給顧問，等候資安報告回覆。這種做法不用填聯絡資料，檔案也不會經過網路上傳。</li>
-  <li><b>只寄結果檔</b>：直接把 <code>findings-ai-日期時間.json</code> 寄給顧問，顧問會回信請您填問卷；打不開網頁時，顧問會改寄純文字問卷，在選項前打 x 回信即可。</li>
+  <li><b>只寄結果檔</b>：直接把 <code>findings-ai-日期時間.json</code> 寄給顧問，顧問會回信請你填問卷；打不開網頁時，顧問會改寄純文字問卷，在選項前打 x 回信即可。</li>
 </ul>
+<p>顧問的聯絡方式與回覆時間，請洽提供本工具的單位。</p>
 
-<h3>6.4 顧問會給您什麼</h3>
-<div class="tw"><table>
+<h3>6.4 顧問會給你什麼</h3>
+<div class="tw k1"><table>
 <tr><th>內容</th><th>說明</th></tr>
 <tr><td>主管報告</td><td>給不熟技術的主管看：整體建議、請主管決定的事（含要不要預算）、各主機狀況、建議處理時程、Ubuntu Pro 評估、仍待確認的事。報告檔是 16:9 的投影片版面，用瀏覽器開啟後按「下載 PDF」可存成 PDF，每頁也可以直接截圖貼進簡報</td></tr>
 <tr><td>處理追蹤表</td><td>給系統維護廠商：每個項目的做法、建議期限與負責單位，以及要優先安裝的更新與指令</td></tr>
 </table></div>
-<div class="note">報告依健檢資料與您提供的主機用途整理，不是實際的入侵測試。期限是顧問建議，機關有自己的規定時以規定為準。</div>
+<div class="note">報告依健檢資料與你提供的主機用途整理，不是實際的滲透測試。期限是顧問建議，機關有自己的規定時以規定為準。</div>
+
+<h3>6.5 資料怎麼保存、什麼時候刪除</h3>
+<div class="tw"><table>
+<tr><th>交法</th><th>存在哪裡</th><th>什麼時候刪除</th></tr>
+<tr><td>用上傳網頁送出</td><td>顧問的 Google 雲端硬碟（回答檔）與收件總表（聯絡資料）</td><td>結案後滿 90 天刪除，雲端硬碟的垃圾桶再保留 30 天後永久清除</td></tr>
+<tr><td>用 Email 寄給顧問</td><td>顧問的公司信箱與 Google 雲端硬碟</td><td>同上，結案後滿 90 天刪除</td></tr>
+</table></div>
+<p><b>結案</b>：顧問用 Email 寄出報告，並確認你已經收到，就算結案。交出去的只有去識別化的結果與問卷答案，不含主機名稱、IP 或帳號；聯絡資料只用於這次健檢聯繫。你可以向顧問請求查詢、更正或提早刪除你的資料。</p>
 
 <h2>7. 更新官方資料與常見問題</h2>
 
@@ -548,7 +603,7 @@ sudo apt upgrade</pre>
 <tr><td>使用自己保管的資料</td><td>在指令後面加 <code>--data 資料夾路徑</code></td></tr>
 <tr><td>每次掃描前自動檢查新資料</td><td>在 <code>scan</code>、<code>report</code>、<code>local</code> 後面加 <code>--refresh-data</code>，連不上會改用已下載的資料</td></tr>
 </table></div>
-<p>GitHub 上的資料是本專案每天從 Canonical 官方網站取得的副本，檔案沒有修改過，下載後一樣會核對內容與 SHA-256。</p>
+<p>GitHub 上的資料是本專案每天從 Canonical 官方網站取得的副本，檔案沒有修改過，下載後工具一樣會核對檔案指紋（SHA-256），確認內容沒被改過。</p>
 
 <h3>7.2 常見問題</h3>
 
@@ -564,8 +619,22 @@ ssh -p 2222 admin@10.0.0.5 'echo OK'</pre>
 <p><b>Q：出現「找不到主機清單 hosts.txt」</b></p>
 <p>還沒建立主機清單，照 3.1 節做。</p>
 
-<p><b>Q：出現「Permission denied」</b></p>
+<p><b>Q：<code>./hc scan</code> 時出現「Permission denied (publickey…)」</b></p>
 <p>帳號或金鑰不對，照 3.2 節確認 <code>ssh 帳號@IP 'echo OK'</code> 能不用密碼登入。</p>
+
+<p><b>Q：執行 <code>./hc</code> 時出現「Permission denied」或「permission denied: ./hc」</b></p>
+<p>檔案少了「可以執行」的權限，常見於用壓縮檔下載、或從隨身碟複製過來的情況。在工具資料夾裡執行一次下面這行就好：</p>
+<pre>chmod +x hc collect.sh</pre>
+<p>也可以改用 <code>python3 hc local</code> 這種寫法執行。</p>
+
+<p><b>Q：出現「python3: command not found」或「找不到指令 python3」</b></p>
+<p>分析電腦沒有安裝 Python 3。Ubuntu 用 <code>sudo apt install -y python3</code> 安裝；macOS 執行 <code>xcode-select --install</code> 安裝開發者工具。</p>
+
+<p><b>Q：出現「git: command not found」</b></p>
+<p>沒有安裝 git。照 2.1 節安裝，或改到 Releases 下載 <code>Ubuntu-Server-Audit-full.zip</code>（2.2 節）。</p>
+
+<p><b>Q：不確定指令怎麼用、或想知道工具版本</b></p>
+<p>執行 <code>./hc -h</code> 看說明，每個指令也都能加 <code>-h</code>，例如 <code>./hc scan -h</code>；執行 <code>./hc --version</code> 看版本。</p>
 
 <p><b>Q：出現「Could not resolve hostname」</b></p>
 <p>分析電腦查不到這個主機名稱，<code>hosts.txt</code> 改寫 IP。</p>
@@ -603,7 +672,8 @@ ssh -p 2222 admin@10.0.0.5 'echo OK'</pre>
 <tr><td>交給顧問分析</td><td>用上傳網頁送出報告資料夾裡的 <code>findings-ai-日期時間.json</code>（第 6 章）</td></tr>
 <tr><td>整份報告去識別化</td><td>原本的指令後面加 <code>--deidentify</code></td></tr>
 <tr><td>掃描前先檢查新的官方資料</td><td>原本的指令後面加 <code>--refresh-data</code></td></tr>
-<tr><td>看完整參數說明</td><td><code>./hc scan -h</code>、<code>./hc report -h</code></td></tr>
+<tr><td>看完整參數說明</td><td><code>./hc -h</code>、<code>./hc scan -h</code>、<code>./hc report -h</code></td></tr>
+<tr><td>看工具版本</td><td><code>./hc --version</code></td></tr>
 </table></div>
 
 <p class="mut">授權：工具程式碼採用 Apache License 2.0。官方 OVAL 資料的著作權屬於 Canonical Ltd.，授權 CC BY-SA 4.0，本專案原樣轉存、未經修改。</p>

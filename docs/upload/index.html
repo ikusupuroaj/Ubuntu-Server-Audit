@@ -60,6 +60,7 @@ details.host[open]>summary::before{transform:rotate(90deg)}
 .bar .in{max-width:820px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
 .bar .msg{flex:1 1 260px;font-size:14px}
 .hidden{display:none!important}
+.ver{max-width:820px;margin:0 auto;padding:4px 16px 0;font-size:12px;color:var(--mut);text-align:center}
 textarea{width:100%;min-height:260px;font:13px/1.5 "SF Mono",Menlo,Consolas,monospace;border:1px solid var(--line);border-radius:8px;padding:10px}
 code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;background:var(--card);padding:1px 5px;border-radius:4px;word-break:break-all}
 dialog.modal{border:0;border-radius:12px;padding:0;max-width:min(480px,calc(100vw - 32px));box-shadow:0 10px 40px rgba(0,0,0,.25);color:var(--fg)}
@@ -145,6 +146,8 @@ dialog.modal .acts{text-align:right;margin-top:14px}
   <div class="acts"><button type="button" class="btn" id="mailok">知道了</button></div>
 </div></dialog>
 
+<p class="ver" id="ver"></p>
+
 <div class="bar hidden" id="bar"><div class="in">
   <div class="msg" id="barmsg"></div>
   <button type="button" class="btn sec" id="dl">不上傳，下載回答檔</button>
@@ -159,6 +162,8 @@ var ENDPOINT = "https://script.google.com/macros/s/AKfycbx8fWYKj93DtpVzdhWMj2lII
 var CONSULTANT_EMAIL = "vincent.chen@datasitter.com";
 // 回答檔格式：/2 起把整份 findings-ai 內容放進 findings 欄位，客戶只要寄一個檔案
 var ANSWERS_SCHEMA = "offline-ubuntu-healthcheck-answers/2";
+// 網頁版本：和 GitHub 的 tag（v0.7.3）、收件程式 Code.gs 的 VERSION 用同一個號碼，改網頁時一起升
+var PAGE_VERSION = "0.7.3";
 
 // 題目與選項：與顧問端的分析規則使用同一份選項文字與題目條件，改這裡要通知顧問同步修改
 var Q = {
@@ -425,6 +430,7 @@ function buildAnswers(channel){
     findings_file:S.name, findings_sha256:S.sha,   // 原檔名與原檔指紋（判斷重複送件用）
     generated_at:String(S.data.generated_at || ""), tool_version:String(S.data.tool_version || ""), basis_month:String(S.data.basis_month || ""),
     labels:ORDER.reduce(function(m, k){ m[k] = Q[k].label; return m; }, {}),
+    page_version:PAGE_VERSION,
     hosts:hosts,
     findings:S.data   // 整份健檢結果（findings-ai 檔的內容），放最後
   };
@@ -508,6 +514,19 @@ $("mktext").addEventListener("click", function(){
   });
   var t = $("plain"); t.value = L.join("\n"); t.classList.remove("hidden"); t.select();
 });
+
+// ---------- 版本 ----------
+// 頁尾顯示網頁版本與收件程式版本；查收件程式只送一個不帶任何資料的 GET
+function showVersion(intake){
+  $("ver").textContent = "上傳網頁 " + PAGE_VERSION + "｜收件程式 " + intake;
+}
+showVersion(ENDPOINT ? "查詢中…" : "未設定");
+if (ENDPOINT){
+  fetch(ENDPOINT, {method:"GET", redirect:"follow"})
+    .then(function(r){ return r.json(); })
+    .then(function(r){ showVersion(r && r.version ? r.version : "版本不明"); })
+    .catch(function(){ showVersion("目前連不上（仍可下載回答檔寄給顧問）"); });
+}
 
 // ---------- 事件 ----------
 $("file").addEventListener("change", function(e){ if (e.target.files[0]) readFile(e.target.files[0]); });

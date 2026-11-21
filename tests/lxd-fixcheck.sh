@@ -1,5 +1,5 @@
 #!/bin/bash
-# offline-ubuntu-healthcheck｜「只修這一則」指令的 LXD 驗證（tests/lxd-fixcheck.sh）
+# Ubuntu-Server-Audit｜「只修這一則」指令的 LXD 驗證（tests/lxd-fixcheck.sh）
 # 版本：0.6.5
 #
 # 驗證 v0.6 報告「重大與高風險公告」附的兩行指令：

@@ -1,5 +1,5 @@
 #!/bin/bash
-# offline-ubuntu-healthcheck｜收集腳本（collect.sh）
+# Ubuntu-Server-Audit｜收集腳本（collect.sh）
 # 版本：0.5
 #
 # 在受檢主機上執行，只讀取系統資訊，產出一個 tar.gz 交給分析電腦。

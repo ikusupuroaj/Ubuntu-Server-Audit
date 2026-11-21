@@ -12,7 +12,7 @@ details{background:var(--card);border-radius:8px;padding:8px 12px;margin:10px 0}
 h4{font-size:15px;margin:18px 0 4px}code{font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--card);padding:1px 4px;border-radius:4px;word-break:break-all}
 </style></head><body><main>
 <h1>Ubuntu 主機資安健檢報告</h1>
-<p class="mut">受檢單位：示範單位（虛構）　執行單位：示範執行單位（虛構）　判斷基準月份：2026-11　分析程式：offline-ubuntu-healthcheck 0.7.1</p>
+<p class="mut">受檢單位：示範單位（虛構）　執行單位：示範執行單位（虛構）　判斷基準月份：2026-11　分析程式：Ubuntu-Server-Audit 0.7.3</p>
 <h2>一、摘要</h2>
 <p>共 <b>3</b> 台主機，其中 <b>2</b> 台已過標準維護期；發現事項共 23 項，依「Ubuntu Pro 能否解決」分成四類。</p>
 <div class="cards">
@@ -26,7 +26,7 @@ h4{font-size:15px;margin:18px 0 4px}code{font:13px/1.5 ui-monospace,Menlo,Consol
 <tr><td><b>demo-web01</b></td><td>H02</td><td>Ubuntu 22.04.5 LTS</td><td>標準維護期內</td><td>1</td><td>1</td><td>1</td><td>3</td><td>2 則安全公告</td><td>77 則安全公告</td><td>5.15.0-125-generic</td><td>30</td></tr>
 <tr><td><b>demo-ap01</b></td><td>H03</td><td>Ubuntu 20.04.6 LTS</td><td>需 Pro（ESM）</td><td>2</td><td>2</td><td>1</td><td>6</td><td>52 則安全公告</td><td>74 則安全公告</td><td>5.4.0-150-generic</td><td>200</td></tr>
 </table></div><p class="mut">維護年限說明：LTS 版本標準維護 5 年（只涵蓋 Main 套件庫）；訂閱 Ubuntu Pro（ESM）共 10 年（含 Universe）；加購 Legacy 最長 15 年。</p>
-<p class="mut">交件代號是 findings-ai-20261121-215410.json（交給顧問分析的去識別化檔案）裡的主機代號；這張對照表只在本報告，請不要一起寄出。</p>
+<p class="mut">交件代號是 findings-ai-20261122-030222.json（交給顧問分析的去識別化檔案）裡的主機代號；這張對照表只在本報告，請不要一起寄出。</p>
 <h2>三、發現事項（依主機）</h2>
 <h3>demo-db01（Ubuntu 16.04.7 LTS）</h3>
 <p>維護狀態：ESM 已於 2026-05 結束；需 Ubuntu Pro 加購 Legacy，最長到 2031-05</p>
@@ -466,9 +466,9 @@ h4{font-size:15px;margin:18px 0 4px}code{font:13px/1.5 ui-monospace,Menlo,Consol
 <h2>附錄：資料來源</h2>
 <p>比對引擎：內建比對（依官方 OVAL 的同一套判斷條件實作）</p>
 <div class="tw"><table><tr><th>版本</th><th>檔案</th><th>官方產生時間</th><th>距分析日</th><th>SHA-256（前 16 碼）</th><th>與下載紀錄</th></tr>
-<tr><td>focal（20.04）</td><td>oci.com.ubuntu.focal.usn.oval.xml.bz2</td><td>2026-11-19T19:12:11</td><td>2 天</td><td>82081b22507b156b</td><td>一致</td></tr>
-<tr><td>jammy（22.04）</td><td>oci.com.ubuntu.jammy.usn.oval.xml.bz2</td><td>2026-11-19T19:11:32</td><td>2 天</td><td>31a6fe092e8e39a2</td><td>一致</td></tr>
-<tr><td>xenial（16.04）</td><td>oci.com.ubuntu.xenial.usn.oval.xml.bz2</td><td>2026-11-19T19:13:13</td><td>2 天</td><td>1090773a71da18e0</td><td>一致</td></tr>
+<tr><td>focal（20.04）</td><td>oci.com.ubuntu.focal.usn.oval.xml.bz2</td><td>2026-11-19T19:12:11</td><td>3 天</td><td>82081b22507b156b</td><td>一致</td></tr>
+<tr><td>jammy（22.04）</td><td>oci.com.ubuntu.jammy.usn.oval.xml.bz2</td><td>2026-11-19T19:11:32</td><td>3 天</td><td>31a6fe092e8e39a2</td><td>一致</td></tr>
+<tr><td>xenial（16.04）</td><td>oci.com.ubuntu.xenial.usn.oval.xml.bz2</td><td>2026-11-19T19:13:13</td><td>3 天</td><td>1090773a71da18e0</td><td>一致</td></tr>
 </table></div><p class="mut">弱點資料：Canonical 官方 OVAL（security-metadata.canonical.com），授權 CC BY-SA 4.0。</p>
 <script>window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=true;});});</script>
 </main></body></html>

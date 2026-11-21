@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""offline-ubuntu-healthcheck｜官方資料更新（update-data.py）
+"""Ubuntu-Server-Audit｜官方資料更新（update-data.py）
 
 版本：0.6
 在「能上網」的電腦執行（Python 3.6 以上，只用標準函式庫）。從 Canonical 官方網站下載
@@ -134,7 +134,7 @@ def download(code, dest, src, timeout, quiet):
     url = BASE + name
     rec = src["files"].get(name, {})
     target = os.path.join(dest, name)
-    req = urllib.request.Request(url, headers={"User-Agent": "offline-ubuntu-healthcheck/%s" % VERSION})
+    req = urllib.request.Request(url, headers={"User-Agent": "Ubuntu-Server-Audit/%s" % VERSION})
     if rec.get("last_modified") and os.path.isfile(target) and sha256(target) == rec.get("sha256"):
         req.add_header("If-Modified-Since", rec["last_modified"])
     try:
@@ -265,7 +265,7 @@ def sync_from_git(dest, quiet=True):
 
 def from_github(dest, codes, timeout, quiet):
     """連不到 Canonical 時，從本專案 GitHub 上每天更新的副本下載。"""
-    ua = {"User-Agent": "offline-ubuntu-healthcheck/%s" % VERSION}
+    ua = {"User-Agent": "Ubuntu-Server-Audit/%s" % VERSION}
     try:
         with urllib.request.urlopen(urllib.request.Request(MIRROR + "SOURCES.json", headers=ua), timeout=timeout) as r:
             mirror = json.loads(r.read().decode("utf-8"))
@@ -319,14 +319,27 @@ def verify(dest):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="下載或核對 Canonical 官方 OVAL 弱點資料")
+    class ZhHelp(argparse.RawDescriptionHelpFormatter):
+        def add_usage(self, usage, actions, groups, prefix=None):
+            return super().add_usage(usage, actions, groups, prefix="用法：")
+
+        def format_help(self):
+            return super().format_help().replace(":\n", "：\n")
+    ap = argparse.ArgumentParser(description="下載或核對 Canonical 官方 OVAL 弱點資料（掃描時用來比對還沒裝的安全更新）",
+                                 formatter_class=ZhHelp, add_help=False,
+                                 epilog="範例：\n  ./hc update                      下載全部 LTS 版本的最新資料\n"
+                                        "  ./hc update --releases 20.04,22.04\n"
+                                        "  ./hc update --from github        連不到 Canonical 官方網站時改用 GitHub 副本\n"
+                                        "  ./hc update --list               看目前資料的日期")
+    ap._optionals.title = "選項"
+    ap.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS, help="顯示這份說明")
     ap.add_argument("--dest", default=os.path.join(HERE, "data"), help="存放資料的資料夾（預設：程式旁的 data/）")
     ap.add_argument("--releases", default=",".join(LTS), help="版本號或代號，以逗號分隔，例如 20.04,22.04（預設：全部 LTS）")
     ap.add_argument("--from", dest="source", choices=["canonical", "github"], default="canonical",
                     help="下載來源：canonical 官方網站（預設）；github 本專案每天更新的副本（連不到官方時用）")
     ap.add_argument("--verify", action="store_true", help="只核對，不下載")
     ap.add_argument("--list", action="store_true", help="列出目前資料的日期")
-    ap.add_argument("--timeout", type=int, default=120)
+    ap.add_argument("--timeout", type=int, default=120, help="每個檔案下載的逾時秒數（預設 120）")
     ap.add_argument("--quiet", action="store_true", help="只輸出錯誤（排程用）")
     args = ap.parse_args()
 

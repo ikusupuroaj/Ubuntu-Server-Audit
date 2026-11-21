@@ -1,8 +1,8 @@
 {
   "schema": "offline-ubuntu-healthcheck/0.7",
-  "tool_version": "0.7.1",
+  "tool_version": "0.7.3",
   "basis_month": "2026-11",
-  "generated_at": "20261121-215410",
+  "generated_at": "20261122-030222",
   "deidentified": true,
   "warnings": [],
   "engine": "內建比對（依官方 OVAL 的同一套判斷條件實作）",
@@ -11,21 +11,21 @@
       "file": "oci.com.ubuntu.focal.usn.oval.xml.bz2",
       "sha256": "82081b22507b156b6fbbb079122a4f294ef0ca28e6aaad9141effff2751202f2",
       "timestamp": "2026-11-19T19:12:11",
-      "age_days": 2,
+      "age_days": 3,
       "recorded": true
     },
     "jammy": {
       "file": "oci.com.ubuntu.jammy.usn.oval.xml.bz2",
       "sha256": "31a6fe092e8e39a2f43bcf7d7a949f468cf60a110d4a2c7ebe675121cddce75d",
       "timestamp": "2026-11-19T19:11:32",
-      "age_days": 2,
+      "age_days": 3,
       "recorded": true
     },
     "xenial": {
       "file": "oci.com.ubuntu.xenial.usn.oval.xml.bz2",
       "sha256": "1090773a71da18e0b243418417a7e78b9b594274ac90b17d8239a7347197222e",
       "timestamp": "2026-11-19T19:13:13",
-      "age_days": 2,
+      "age_days": 3,
       "recorded": true
     }
   },

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""offline-ubuntu-healthcheck｜分析程式（analyze.py）
+"""Ubuntu-Server-Audit｜分析程式（analyze.py）
 
-版本：0.7.1
+版本：0.7.3
 在分析用的電腦執行（Python 3.6 以上，只用標準函式庫，不需連網）。
 
 用法：
@@ -43,7 +43,7 @@ import unicodedata
 import xml.etree.ElementTree as ET
 from html import escape as html_escape
 
-TOOL_VERSION = "0.7.1"
+TOOL_VERSION = "0.7.3"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -1164,7 +1164,7 @@ def render_html(hosts, args, rules, datasets, warnings=()):
       '<meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><style>%s</style></head><body><main>'
       % (_e(rt["title"]), HTML_CSS))
     w("<h1>%s</h1>" % _e(rt["title"]))
-    w('<p class="mut">受檢單位：%s　執行單位：%s　判斷基準月份：%s　分析程式：offline-ubuntu-healthcheck %s</p>'
+    w('<p class="mut">受檢單位：%s　執行單位：%s　判斷基準月份：%s　分析程式：Ubuntu-Server-Audit %s</p>'
       % (_e(args.agency or "（未填）"), _e(args.dealer or "（未填）"), _e(args.date), TOOL_VERSION))
     for x in warnings:
         w('<div class="warn">注意：%s</div>' % _e(x))
@@ -1510,18 +1510,20 @@ def default_out(now):
     return os.path.join("reports", now.strftime("%Y-%m-%d-%H%M%S"))
 
 
-def add_common_args(ap):
-    ap.add_argument("--data", default=os.path.join(HERE, "data"), help="官方資料檔所在資料夾（預設：程式旁的 data/）")
-    ap.add_argument("--oval", help="只用這一個官方資料檔（oci.com.ubuntu.<代號>.usn.oval.xml.bz2）")
-    ap.add_argument("--engine", choices=["auto", "oscap", "builtin", "both"], default="auto",
+def add_common_args(ap, adv=None):
+    """共用參數。adv 是「進階選項」群組，沒給就和 ap 放在一起。"""
+    adv = adv or ap
+    ap.add_argument("--agency", default="", metavar="NAME", help="受檢單位，印在報告表頭（例：--agency 資訊室）")
+    ap.add_argument("--assessor", dest="dealer", default="", metavar="NAME", help="執行單位，印在報告表頭")
+    ap.add_argument("--date", default=datetime.date.today().strftime("%Y-%m"), metavar="YYYY-MM", help="判斷基準月份 YYYY-MM（預設本月）")
+    ap.add_argument("--out", default=None, metavar="DIR", help="輸出資料夾（預設 reports/<日期時間>/）")
+    adv.add_argument("--data", default=os.path.join(HERE, "data"), help="官方資料檔所在資料夾（預設：程式旁的 data/）")
+    adv.add_argument("--oval", help="只用這一個官方資料檔（oci.com.ubuntu.<代號>.usn.oval.xml.bz2）")
+    adv.add_argument("--engine", choices=["auto", "oscap", "builtin", "both"], default="auto",
                     help="比對引擎（預設 auto：有 oscap 就用，否則內建）")
-    ap.add_argument("--rules", help="自訂規則檔（JSON），覆蓋在 rules/default-rules.json 上")
-    ap.add_argument("--deidentify", action="store_true",
-                    help="整份報告都去識別化：主機代號改為 H01、H02…（findings-ai 檔每次都是去識別化版本，不必加這個參數）")
-    ap.add_argument("--agency", default="", help="受檢單位（報告表頭）")
-    ap.add_argument("--assessor", dest="dealer", default="", help="執行單位（報告表頭）")
-    ap.add_argument("--date", default=datetime.date.today().strftime("%Y-%m"), help="判斷基準月份 YYYY-MM（預設本月）")
-    ap.add_argument("--out", default=None, help="輸出資料夾（預設 reports/<日期時間>/）")
+    adv.add_argument("--rules", help="自訂規則檔（JSON），覆蓋在 rules/default-rules.json 上")
+    adv.add_argument("--deidentify", action="store_true",
+                     help="整份報告都去識別化：主機代號改為 H01、H02…（findings-ai 檔每次都是去識別化版本，不必加這個參數）")
 
 
 def validate_common(ap, args):
@@ -1541,7 +1543,7 @@ def validate_common(ap, args):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="offline-ubuntu-healthcheck 分析程式（一般使用建議改用 ./hc report）")
+    ap = argparse.ArgumentParser(description="Ubuntu-Server-Audit 分析程式（一般使用建議改用 ./hc report）")
     ap.add_argument("bundles", nargs="+", help="collect.sh 產出的 tar.gz（或解壓後的資料夾）")
     add_common_args(ap)
     args = ap.parse_args()

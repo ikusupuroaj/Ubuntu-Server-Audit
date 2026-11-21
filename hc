@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""offline-ubuntu-healthcheck｜統一入口（hc）
+"""Ubuntu-Server-Audit｜統一入口（hc）
 
-版本：0.7.1
+版本：0.7.3
 一個指令完成收集與分析。只用 Python 3.6 以上的標準函式庫。
 
-  ./hc scan hosts.txt          用 SSH 逐台收集並分析（主機上不留下收集腳本與收集檔）
-  ./hc report 收集檔...         分析別人交回來的收集檔（hc-*.tar.gz）
-  ./hc local                   檢查這台機器自己
-scan 與 local 預設用 sudo 收集（0.7.1 起）；不想用 sudo 時加 --no-sudo。
+常用指令（都在 Ubuntu-Server-Audit 資料夾裡執行）：
+  ./hc local                   檢查這台電腦自己
+  ./hc scan hosts.txt          用 SSH 逐台檢查清單上的主機（主機上不留下任何檔案）
+  ./hc report 收集檔...         分析主機管理者交回來的收集檔（hc-*.tar.gz）
   ./hc update                  從 Canonical 官方網站更新弱點資料（要能上網）
+  ./hc --version               顯示版本
+
+local 與 scan 預設用 sudo（系統管理員權限）收集；不想用 sudo 時加 --no-sudo。
 
 hosts.txt 每行一台：「代號  SSH 目標  [其他 ssh 參數]」，例如：
   H01  admin@10.0.0.5
@@ -17,7 +20,7 @@ hosts.txt 每行一台：「代號  SSH 目標  [其他 ssh 參數]」，例如�
 
 用 git clone 下載時，GitHub 上每天更新的官方資料會一起下載，第一次執行時自動放進 data/。
 
-每個指令都可以加 -h 看完整說明。
+每個指令都可以加 -h 看完整說明，例如：./hc scan -h
 """
 import argparse
 import datetime
@@ -403,31 +406,68 @@ def cmd_update(argv):
     return up.main()
 
 
+class ZhHelp(argparse.RawDescriptionHelpFormatter):
+    """說明畫面的固定字改成中文。"""
+    def add_usage(self, usage, actions, groups, prefix=None):
+        return super().add_usage(usage, actions, groups, prefix="用法：")
+
+    def format_help(self):
+        text = super().format_help().replace(":\n", "：\n")   # 段落標題的冒號改全形
+        return text.replace("指令：\n  指令\n", "指令：\n")   # 拿掉 argparse 自動產生的佔位行
+
+
+class ZhParser(argparse.ArgumentParser):
+    """常見的參數錯誤訊息改成中文。"""
+    MSG = [("the following arguments are required:", "缺少必填的參數："), ("unrecognized arguments:", "看不懂的參數："),
+           ("invalid choice:", "沒有這個選項："), ("choose from", "可以選"), ("expected one argument", "後面要接一個值")]
+
+    def error(self, message):
+        for en, zh_msg in self.MSG:
+            message = message.replace(en, zh_msg)
+        self.print_usage(sys.stderr)
+        self.exit(2, "%s：%s\n（加 -h 看說明，例如 %s -h）\n" % (self.prog, message, self.prog))
+
+
+def zh(p, example=None):
+    """把 argparse 的英文標題換成中文，並加上 -h 與範例。"""
+    p._positionals.title = "必填"
+    p._optionals.title = "常用選項"
+    p.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS, help="顯示這份說明")
+    if example:
+        p.epilog = "範例：\n" + "\n".join("  " + x for x in example)
+    return p
+
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "update":
         return cmd_update(sys.argv[2:])
-    ap = argparse.ArgumentParser(prog="hc", description="\n\n".join(__doc__.split("\n\n")[2:4]),
-                                 formatter_class=argparse.RawDescriptionHelpFormatter,
-                                 epilog="更新官方資料：./hc update（可加 --releases 20.04,22.04、--from github、--verify、--list；"
-                                        "完整說明：./hc update -h）")
-    sub = ap.add_subparsers(dest="cmd")
-    p1 = sub.add_parser("scan", help="用 SSH 逐台收集並分析")
-    p1.add_argument("hosts", help="主機清單檔（每行：代號 SSH目標 [ssh 參數]）")
+    ap = zh(ZhParser(prog="hc", description="\n\n".join(__doc__.split("\n\n")[1:4]),
+                                    formatter_class=ZhHelp, add_help=False))
+    ap.epilog = ("更新官方資料：./hc update（可加 --releases 20.04,22.04、--from github、--verify、--list；"
+                 "完整說明：./hc update -h）")
+    ap.add_argument("--version", action="version", version="hc（Ubuntu-Server-Audit）%s" % A.TOOL_VERSION, help="顯示版本")
+    sub = ap.add_subparsers(dest="cmd", title="指令", metavar="指令")
+    kw = dict(formatter_class=ZhHelp, add_help=False)
+    p1 = zh(sub.add_parser("scan", prog="hc scan", help="用 SSH 逐台收集並分析", **kw),
+            ["./hc scan hosts.txt", "./hc scan hosts.txt --agency 資訊室"])
+    p1.add_argument("hosts", help="主機清單檔（每行：代號 SSH目標 [ssh 參數]），範本見 hosts.example.txt")
     p1.add_argument("--no-sudo", action="store_true",
                     help="不用 sudo，只用一般權限收集。預設會用 sudo -n 收集；主機沒有設定免密碼 sudo 時自動改用一般權限")
     p1.add_argument("--sudo", action="store_true", help=argparse.SUPPRESS)  # 0.7.0 以前的寫法，現在是預設，保留不報錯
-    p2 = sub.add_parser("report", help="分析交回來的收集檔")
-    p2.add_argument("bundles", nargs="+", help="hc-*.tar.gz")
-    p3 = sub.add_parser("local", help="檢查這台機器自己")
+    p2 = zh(sub.add_parser("report", prog="hc report", help="分析主機管理者交回來的收集檔", **kw),
+            ["./hc report hc-H01-*.tar.gz", "./hc report hc-H01-*.tar.gz hc-H02-*.tar.gz"])
+    p2.add_argument("bundles", nargs="+", metavar="BUNDLE", help="主機上 collect.sh 產生的 hc-*.tar.gz（不用解壓縮，可一次給多個）")
+    p3 = zh(sub.add_parser("local", prog="hc local", help="檢查這台電腦自己", **kw), ["./hc local", "./hc local --no-sudo"])
     p3.add_argument("--no-sudo", action="store_true", help="不用 sudo，只用一般權限收集。預設用 sudo（會詢問密碼）")
     p3.add_argument("--sudo", action="store_true", help=argparse.SUPPRESS)  # 0.7.0 以前的寫法，現在是預設，保留不報錯
     p3.add_argument("--tag", default="LOCAL", help="報告上的代號（預設 LOCAL）")
     sub.add_parser("update", help="從 Canonical 官方網站更新弱點資料")
     for p in (p1, p2, p3):
-        A.add_common_args(p)
-        p.add_argument("--update", choices=["ask", "yes", "no"], default="ask",
+        adv = p.add_argument_group("進階選項（一般不需要）")
+        A.add_common_args(p, adv)
+        adv.add_argument("--update", choices=["ask", "yes", "no"], default="ask",
                        help="官方資料缺少或過舊時：ask 詢問（預設）、yes 自動更新、no 不更新")
-        p.add_argument("--refresh-data", action="store_true",
+        adv.add_argument("--refresh-data", action="store_true",
                        help="開始前先向 Canonical 檢查有沒有新的官方資料，有就下載（最多等 %d 秒）；"
                             "連不上就用已下載的資料，不中斷" % CHECK_TIMEOUT)
     args = ap.parse_args()
