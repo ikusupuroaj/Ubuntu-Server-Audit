@@ -17,11 +17,11 @@ A plain `git clone` also fetches the `data` branch, which GitHub Actions refresh
 
 | Situation | Command |
 |---|---|
-| Check this machine only (Ubuntu) | `./hc local --sudo` |
-| This machine can SSH to the hosts | `cp hosts.example.txt hosts.txt`, edit it, then `./hc scan hosts.txt --sudo` |
+| Check this machine only (Ubuntu) | `./hc local` |
+| This machine can SSH to the hosts | `cp hosts.example.txt hosts.txt`, edit it, then `./hc scan hosts.txt` |
 | Host owners run the collector themselves | on the host: `sudo bash collect.sh --tag H01`; then `./hc report hc-H01-*.tar.gz` |
 
-`./hc scan` pipes the collector over SSH and streams the result back, so the collector and its output are never written on the host (the Ubuntu Pro client and sudo still write their own logs). `--sudo` is optional in all three cases. It adds three checks (SSH config, ufw, empty passwords); without it they are listed as not checked. `hc local --sudo` asks for your sudo password; `hc scan --sudo` needs passwordless sudo on the hosts and otherwise falls back to a normal user. A collector file made with `sudo bash collect.sh` is owned by root: run `sudo chown $USER hc-H01-*.tar.gz` before copying it.
+`./hc scan` pipes the collector over SSH and streams the result back, so the collector and its output are never written on the host (the Ubuntu Pro client and sudo still write their own logs). Since 0.7.1, `hc local` and `hc scan` collect with sudo by default, which covers three extra checks (SSH config, ufw, empty passwords); add `--no-sudo` to skip sudo, and those three are listed as not checked. `hc local` asks for your sudo password; `hc scan` needs passwordless sudo on the hosts and otherwise falls back to a normal user. A collector file made with `sudo bash collect.sh` is owned by root: run `sudo chown $USER hc-H01-*.tar.gz` before copying it.
 
 Open `report-<timestamp>.html` in a browser for the full report. Each run writes three files to `reports/<timestamp>/`: the report, `findings-ai-<timestamp>.json` (de-identified results to send to your consultant) and `oval-detail.json` (full matching details, keep it yourself).
 

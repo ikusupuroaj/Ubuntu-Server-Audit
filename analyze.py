@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """offline-ubuntu-healthcheck｜分析程式（analyze.py）
 
-版本：0.7.0
+版本：0.7.1
 在分析用的電腦執行（Python 3.6 以上，只用標準函式庫，不需連網）。
 
 用法：
@@ -43,7 +43,7 @@ import unicodedata
 import xml.etree.ElementTree as ET
 from html import escape as html_escape
 
-TOOL_VERSION = "0.7.0"
+TOOL_VERSION = "0.7.1"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -1213,7 +1213,7 @@ def render_html(hosts, args, rules, datasets, warnings=()):
             continue
         w("<p>維護狀態：%s</p>" % _e(h["support_text"]))
         if not h["run_as_root"]:
-            w('<p class="mut">以一般使用者收集（預設）：SSH 設定、防火牆、空密碼帳號需要 sudo 才能檢查，列在「未能檢查」。</p>')
+            w('<p class="mut">以一般權限收集（加了 --no-sudo，或主機不能免密碼 sudo）：SSH 設定、防火牆、空密碼帳號需要 sudo 才能檢查，列在「未能檢查」。</p>')
         w("<div class=\"tw\"><table><tr><th>類別</th><th>嚴重度</th><th>發現</th><th>說明</th><th>建議</th><th>Pro 能否解決</th></tr>")
         for x in h["findings"]:
             w('<tr><td><span class="tag t%s">%s</span></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (

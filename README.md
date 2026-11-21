@@ -27,27 +27,27 @@ cd Ubuntu-Server-Audit
 
 | 情況 | 指令 |
 |---|---|
-| 只想檢查這台電腦自己（Ubuntu） | `./hc local --sudo` |
-| 這台電腦可以 SSH 到要檢查的主機 | `cp hosts.example.txt hosts.txt`，編輯後執行 `./hc scan hosts.txt --sudo` |
+| 只想檢查這台電腦自己（Ubuntu） | `./hc local` |
+| 這台電腦可以 SSH 到要檢查的主機 | `cp hosts.example.txt hosts.txt`，編輯後執行 `./hc scan hosts.txt` |
 | 只能請主機管理者自己跑，再把結果交給你 | 主機上：`sudo bash collect.sh --tag H01`<br>你的電腦：`./hc report hc-H01-*.tar.gz` |
 
-三種情況都可以不加 sudo。加了會多檢查 SSH 設定、防火牆（ufw）、空密碼帳號三項；沒加的話，報告會把這三項列在「未能檢查」。
+三種情況預設都用 sudo 收集（0.7.1 起）。用 sudo 才能檢查 SSH 設定、防火牆（ufw）、空密碼帳號三項；不想用 sudo 時，`hc local`、`hc scan` 加 `--no-sudo`，這三項會列在報告的「未能檢查」。
 
 ### 情況一：只想檢查這台電腦自己
 
 要檢查的 Ubuntu 主機就是你正在用的這台。收集和分析都在這台完成，不需要 SSH。
 
 ```bash
-./hc local --sudo
+./hc local
 ```
 
-`--sudo` 會詢問你這個帳號的 sudo 密碼。這個方式只能在 Ubuntu 上用：macOS 和 Windows 沒有 Ubuntu 的套件清單，沒有東西可以檢查。
+執行時會詢問你這個帳號的 sudo 密碼。這個方式只能在 Ubuntu 上用：macOS 和 Windows 沒有 Ubuntu 的套件清單，沒有東西可以檢查。
 
 ### 情況二：用 SSH 一次掃描多台主機
 
 ```mermaid
 flowchart LR
-  A["分析電腦<br>./hc scan hosts.txt --sudo"] -- "① 經 SSH 送入收集腳本" --> B["受檢主機<br>H01、H02…"]
+  A["分析電腦<br>./hc scan hosts.txt"] -- "① 經 SSH 送入收集腳本" --> B["受檢主機<br>H01、H02…"]
   B -- "② 收集結果傳回<br>（主機上不留收集檔）" --> A
   A -- "③ 與 data/ 的官方資料比對" --> C["reports/日期時間/<br>report-日期時間.html"]
 ```
@@ -66,10 +66,10 @@ H02   ops@10.0.0.6     -p 2222
 然後執行：
 
 ```bash
-./hc scan hosts.txt --sudo
+./hc scan hosts.txt
 ```
 
-收集腳本經 SSH 送進主機執行，結果直接傳回這台電腦，主機上不會留下腳本或收集檔。報告上只會出現代號，不會出現 IP。這裡的 `--sudo` 需要主機設定免密碼 sudo；沒有設定的主機會自動改用一般權限收集。
+收集腳本經 SSH 送進主機執行，結果直接傳回這台電腦，主機上不會留下腳本或收集檔。報告上只會出現代號，不會出現 IP。預設會用 sudo 收集，主機上的帳號要能免密碼 sudo；沒有設定的主機會自動改用一般權限收集，畫面上會註明。
 
 ### 情況三：請主機管理者自己執行，再把結果交給你
 

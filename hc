@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """offline-ubuntu-healthcheck｜統一入口（hc）
 
-版本：0.7.0
+版本：0.7.1
 一個指令完成收集與分析。只用 Python 3.6 以上的標準函式庫。
 
   ./hc scan hosts.txt          用 SSH 逐台收集並分析（主機上不留下收集腳本與收集檔）
   ./hc report 收集檔...         分析別人交回來的收集檔（hc-*.tar.gz）
   ./hc local                   檢查這台機器自己
+scan 與 local 預設用 sudo 收集（0.7.1 起）；不想用 sudo 時加 --no-sudo。
   ./hc update                  從 Canonical 官方網站更新弱點資料（要能上網）
 
 hosts.txt 每行一台：「代號  SSH 目標  [其他 ssh 參數]」，例如：
@@ -352,10 +353,10 @@ def cmd_scan(args, rules):
         base = ["ssh", "-o", "ConnectTimeout=15"] + extra + [target]
         t0 = time.time()
         note = ""
-        if args.sudo:
+        if not args.no_sudo:
             ok, err = collect_via(base + ["sudo -n " + remote], path)
             if not ok and "sudo" in err.lower():
-                note = "（sudo 需要密碼或不允許，改用一般權限）"
+                note = "（這台主機沒有設定免密碼 sudo，改用一般權限；SSH 設定、防火牆、空密碼帳號會列為未能檢查）"
                 ok, err = collect_via(base + [remote], path)
         else:
             ok, err = collect_via(base + [remote], path)
@@ -387,11 +388,12 @@ def cmd_local(args, rules):
     cdir = collected_dir(args)
     os.makedirs(cdir, exist_ok=True)
     path = os.path.join(cdir, "hc-%s.tar.gz" % args.tag)
-    cmd = (["sudo"] if args.sudo else []) + ["bash", COLLECT, "--tag", args.tag, "--stdout"]
-    print("收集本機資料%s…" % ("（使用 sudo）" if args.sudo else ""))
+    use_sudo = not args.no_sudo and os.geteuid() != 0
+    cmd = (["sudo"] if use_sudo else []) + ["bash", COLLECT, "--tag", args.tag, "--stdout"]
+    print("收集本機資料%s…" % ("（使用 sudo，可能會詢問你的密碼）" if use_sudo else ""))
     ok, err = collect_via(cmd, path, use_stdin=False)
     if not ok:
-        sys.exit("收集失敗：%s" % err)
+        sys.exit("收集失敗：%s%s" % (err, "\n不能用 sudo 的話，可以加 --no-sudo 改用一般權限（SSH 設定、防火牆、空密碼帳號會列為未能檢查）。" if use_sudo else ""))
     finish(A.load_inputs([path]), args, rules)
 
 
@@ -411,11 +413,14 @@ def main():
     sub = ap.add_subparsers(dest="cmd")
     p1 = sub.add_parser("scan", help="用 SSH 逐台收集並分析")
     p1.add_argument("hosts", help="主機清單檔（每行：代號 SSH目標 [ssh 參數]）")
-    p1.add_argument("--sudo", action="store_true", help="用 sudo -n 收集（需要免密碼 sudo；不行時自動改用一般權限）")
+    p1.add_argument("--no-sudo", action="store_true",
+                    help="不用 sudo，只用一般權限收集。預設會用 sudo -n 收集；主機沒有設定免密碼 sudo 時自動改用一般權限")
+    p1.add_argument("--sudo", action="store_true", help=argparse.SUPPRESS)  # 0.7.0 以前的寫法，現在是預設，保留不報錯
     p2 = sub.add_parser("report", help="分析交回來的收集檔")
     p2.add_argument("bundles", nargs="+", help="hc-*.tar.gz")
     p3 = sub.add_parser("local", help="檢查這台機器自己")
-    p3.add_argument("--sudo", action="store_true", help="用 sudo 執行收集（會詢問密碼）")
+    p3.add_argument("--no-sudo", action="store_true", help="不用 sudo，只用一般權限收集。預設用 sudo（會詢問密碼）")
+    p3.add_argument("--sudo", action="store_true", help=argparse.SUPPRESS)  # 0.7.0 以前的寫法，現在是預設，保留不報錯
     p3.add_argument("--tag", default="LOCAL", help="報告上的代號（預設 LOCAL）")
     sub.add_parser("update", help="從 Canonical 官方網站更新弱點資料")
     for p in (p1, p2, p3):

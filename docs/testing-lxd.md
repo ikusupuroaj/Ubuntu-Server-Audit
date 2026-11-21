@@ -42,7 +42,7 @@ tests/lxd-quicktest.sh 20.04 22.04 24.04 26.04
 |---|---|
 | 下載並核對官方資料 | T13 |
 | 建立虛擬機，裝一個 Universe 套件（nginx） | |
-| 一般使用者與 sudo 各收集一次 | T1、T6、T12 |
+| 用 sudo 收集一次（和客戶實際做法相同，健檢報告一台測試機一列） | T1、T12 |
 | 檢查收集時有沒有寫入其他檔案 | T2 |
 | 關掉網路再收集一次，記錄花多久 | T3 |
 | 檢查收集結果裡有沒有主機名稱與 IP | T7 |
@@ -56,8 +56,8 @@ tests/lxd-quicktest.sh 20.04 22.04 24.04 26.04
 ```
 test-results/<日期時間>/
 ├── RESULTS.md          測試結果表
-├── report/report-*.html  健檢報告，用瀏覽器打開
-├── bundles/            收集到的檔案
+├── report/             健檢報告（report-*.html 用瀏覽器打開）與 findings-ai-*.json，一台測試機一列
+├── bundles/            用 sudo 收集到的檔案
 └── logs/               每個步驟的紀錄（出問題時看這裡）
 ```
 
@@ -102,10 +102,10 @@ lxc exec t-2204 -- cloud-init status --wait
 收集，不必先把腳本傳進虛擬機：
 
 ```bash
-lxc exec t-2204 -- su - ubuntu -c 'bash -s -- --tag T-2204 --stdout' < collect.sh > runs/hc-T-2204.tar.gz
+lxc exec t-2204 -- su - ubuntu -c 'sudo -n bash -s -- --tag T-2204 --stdout' < collect.sh > runs/hc-T-2204.tar.gz
 ```
 
-要用 sudo 的話，把 `bash -s` 換成 `sudo -n bash -s`。
+這和工具預設一樣用 sudo 收集。要測一般權限（T6）的話，把 `sudo -n bash -s` 換成 `bash -s`。
 
 分析：
 

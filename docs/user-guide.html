@@ -74,7 +74,7 @@ figure.arch ol.legend li{padding-left:1.6em;text-indent:-1.6em}
 
 <section class="cover">
   <h1>Ubuntu 主機資安健檢工具<br>使用者手冊</h1>
-  <p class="sub">offline-ubuntu-healthcheck 0.7.0</p>
+  <p class="sub">offline-ubuntu-healthcheck 0.7.1</p>
   <p class="mut">2026 年 11 月</p>
   <p class="mut">工具下載：https://github.com/ikusupuroaj/Ubuntu-Server-Audit</p>
   <p class="mut" style="margin-top:40px">本工具不是 Canonical 的官方工具，與 Canonical 沒有隸屬關係，也沒有經過 Canonical 背書。Ubuntu 是 Canonical Ltd. 的商標。</p>
@@ -246,20 +246,20 @@ H02   ops@10.0.0.6     -p 2222</pre>
 <div class="step"><b class="n">3</b><div><p>確認可以免密碼登入，看到 <code>OK</code> 就成功了：</p><pre>ssh admin@10.0.0.5 'echo OK'</pre><p>第一次連線會問要不要信任這台主機，確認 IP 沒錯後回答 <code>yes</code>。</p></div></div>
 
 <h3>3.3 要不要用 sudo</h3>
-<p>預設用一般權限就能檢查版本、套件、核心與 Ubuntu Pro 狀態。加上 <code>--sudo</code> 會多檢查三項：SSH 設定、防火牆、空密碼帳號。</p>
-<p><code>./hc scan --sudo</code> 需要主機上的帳號可以「免密碼 sudo」。不行的話，工具會自動改用一般權限，那三項在報告上列為「未能檢查」，不會被當成沒問題。</p>
+<p>工具預設用 sudo 收集。版本、套件、核心與 Ubuntu Pro 狀態用一般權限就能檢查；SSH 設定、防火牆、空密碼帳號這三項要用 sudo 才看得到。</p>
+<p><code>./hc scan</code> 需要主機上的帳號可以「免密碼 sudo」。不行的話，工具會自動改用一般權限，那三項在報告上列為「未能檢查」，不會被當成沒問題。不想用 sudo 時，加上 <code>--no-sudo</code>。</p>
 
 <h2>4. 收集資料並產生報告</h2>
-<p>依你的情況選一種。三種做法產生的報告完全一樣。</p>
+<p>依你的情況選一種。三種做法只要都用 sudo 收集，產生的報告完全一樣。</p>
 
 <h3>情況一：只想檢查分析電腦自己</h3>
 <p>要檢查的 Ubuntu 主機就是你正在用的這台。收集和分析都在這台完成，不需要 SSH，也不需要第 3 章的主機清單。</p>
-<pre>./hc local --sudo</pre>
-<p><code>--sudo</code> 會詢問你這個帳號的 sudo 密碼。不加也能跑，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p>
+<pre>./hc local</pre>
+<p>執行時會詢問你這個帳號的 sudo 密碼。加上 <code>--no-sudo</code> 就不用 sudo，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p>
 <p>只有分析電腦本身是 Ubuntu 時才能用。macOS 沒有 Ubuntu 的套件清單，可以用來掃別台主機，但不能掃自己。</p>
 
 <h3>情況二：分析電腦能用 SSH 連到主機（多台主機時建議）</h3>
-<div class="step"><b class="n">1</b><div><p>在 <code>Ubuntu-Server-Audit</code> 資料夾裡執行：</p><pre>./hc scan hosts.txt --sudo</pre><p>不需要 sudo 就把 <code>--sudo</code> 拿掉。</p></div></div>
+<div class="step"><b class="n">1</b><div><p>在 <code>Ubuntu-Server-Audit</code> 資料夾裡執行：</p><pre>./hc scan hosts.txt</pre><p>預設用 sudo 收集；不想用 sudo 時加上 <code>--no-sudo</code>。</p></div></div>
 <div class="step"><b class="n">2</b><div><p>等它跑完。每台主機通常 3 到 15 秒。畫面會像這樣（實測輸出）：</p>
 <pre class="out">開始收集 1 台主機（收集檔存放在 reports/2026-11-16-151406/collected，內含套件清單，請妥善保管）
   [1/1] H01：完成，3 秒
@@ -289,7 +289,7 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 <text class="zl" x="22" y="30">你的分析電腦（掃描時不必上網）</text>
 <rect class="hl" x="28" y="44" width="244" height="40" rx="8"/>
 <circle class="bd" cx="46" cy="64" r="10"/><text class="bn" x="46" y="68" text-anchor="middle">2</text>
-<text class="c" x="62" y="68">./hc scan hosts.txt --sudo</text>
+<text class="c" x="62" y="68">./hc scan hosts.txt</text>
 <rect class="bx" x="28" y="100" width="244" height="252" rx="8"/>
 <text class="c" x="40" y="120">Ubuntu-Server-Audit/</text>
 <rect class="wb" x="40" y="130" width="220" height="40" rx="6"/>
@@ -345,7 +345,7 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 </div>
 <ol class="legend">
   <li>① 把要檢查的主機寫進 <code>hosts.txt</code>（3.1 節），並設好免密碼登入（3.2 節）。</li>
-  <li>② 在分析電腦上執行 <code>./hc scan hosts.txt --sudo</code>。</li>
+  <li>② 在分析電腦上執行 <code>./hc scan hosts.txt</code>。</li>
   <li>③ 工具經 SSH 逐台登入，把 <code>collect.sh</code> 送進主機執行。不安裝套件、不改設定（主機上會留下哪些紀錄見 4.3 節）。</li>
   <li>④ 收集結果傳回分析電腦，主機上不會留下腳本或收集檔。</li>
   <li>⑤ 在分析電腦上和 <code>data/</code> 裡的官方資料比對，不必上網。</li>
@@ -358,7 +358,7 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 
 <h3>情況三：只能請主機管理者自己收集</h3>
 <div class="step"><b class="n">1</b><div><p>把 <code>collect.sh</code> 這個檔案交給主機管理者（隨身碟、內部檔案分享都可以）。</p></div></div>
-<div class="step"><b class="n">2</b><div><p>請管理者在主機上執行，<code>H01</code> 換成這台的代號：</p><pre>bash collect.sh --tag H01</pre><p>要多檢查 SSH、防火牆、空密碼帳號時改用：</p><pre>sudo bash collect.sh --tag H01</pre><p>完成後，目前的資料夾會多一個 <code>hc-H01-日期時間.tar.gz</code>。</p><p>用 sudo 產生的檔案屬於 root，只有 root 能讀。複製出來之前，先把檔案的擁有者改成自己：</p><pre>sudo chown $USER hc-H01-*.tar.gz</pre></div></div>
+<div class="step"><b class="n">2</b><div><p>請管理者在主機上執行，<code>H01</code> 換成這台的代號：</p><pre>sudo bash collect.sh --tag H01</pre><p>沒有 sudo 權限時改用 <code>bash collect.sh --tag H01</code>，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p><p>完成後，目前的資料夾會多一個 <code>hc-H01-日期時間.tar.gz</code>。</p><p>用 sudo 產生的檔案屬於 root，只有 root 能讀。複製出來之前，先把檔案的擁有者改成自己：</p><pre>sudo chown $USER hc-H01-*.tar.gz</pre></div></div>
 <div class="step"><b class="n">3</b><div><p>管理者把這個檔案交回給你。你在分析電腦上執行：</p><pre>./hc report hc-H01-*.tar.gz</pre><p>多台一起分析，就把檔案都列上去，或用 <code>./hc report hc-*.tar.gz</code>。</p></div></div>
 
 <h3>4.1 報告表頭與去識別化</h3>
@@ -570,7 +570,7 @@ ssh -p 2222 admin@10.0.0.5 'echo OK'</pre>
 <p><b>Q：出現「Could not resolve hostname」</b></p>
 <p>分析電腦查不到這個主機名稱，<code>hosts.txt</code> 改寫 IP。</p>
 
-<p><b>Q：用了 --sudo，SSH 設定、防火牆還是「未能檢查」</b></p>
+<p><b>Q：SSH 設定、防火牆顯示「未能檢查」</b></p>
 <p>那台主機的帳號不能免密碼 sudo，工具自動改用了一般權限，畫面上會有說明。可以請管理者用情況三的 <code>sudo bash collect.sh --tag 代號</code> 收集。</p>
 
 <p><b>Q：畫面說官方資料超過 7 天</b></p>
@@ -595,9 +595,9 @@ ssh -p 2222 admin@10.0.0.5 'echo OK'</pre>
 <tr><td>看官方資料日期</td><td><code>./hc update --list</code></td></tr>
 <tr><td>更新官方資料</td><td><code>./hc update</code> 或 <code>git pull</code></td></tr>
 <tr><td>核對資料沒被改過</td><td><code>./hc update --verify</code></td></tr>
-<tr><td>檢查這台電腦自己</td><td><code>./hc local --sudo</code></td></tr>
+<tr><td>檢查這台電腦自己</td><td><code>./hc local</code></td></tr>
 <tr><td>建立主機清單</td><td><code>cp hosts.example.txt hosts.txt</code></td></tr>
-<tr><td>用 SSH 收集並分析</td><td><code>./hc scan hosts.txt --sudo</code></td></tr>
+<tr><td>用 SSH 收集並分析</td><td><code>./hc scan hosts.txt</code></td></tr>
 <tr><td>主機管理者自己收集</td><td><code>sudo bash collect.sh --tag H01</code></td></tr>
 <tr><td>分析交回來的收集檔</td><td><code>./hc report hc-*.tar.gz</code></td></tr>
 <tr><td>交給顧問分析</td><td>用上傳網頁送出報告資料夾裡的 <code>findings-ai-日期時間.json</code>（第 6 章）</td></tr>

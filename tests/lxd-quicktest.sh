@@ -1,9 +1,9 @@
 #!/bin/bash
 # offline-ubuntu-healthcheck｜LXD 快速測試（tests/lxd-quicktest.sh）
-# 版本：0.5
+# 版本：0.6（2026-11-21：照客戶實際做法，每台測試機只用 sudo 收集一次，報告一台一列；不再測一般使用者）
 #
 # 在一台裝好 LXD 的 Ubuntu（例如 Desktop 26.04）上，一個指令完成：
-#   建立虛擬機 → 裝一個 Universe 套件 → 一般使用者與 sudo 各收集一次 → 斷網再收集一次並計時
+#   建立虛擬機 → 裝一個 Universe 套件 → 用 sudo 收集一次 → 斷網再收集一次並計時
 #   → 檢查有沒有寫入其他檔案 → 檢查收集檔有沒有主機名稱與 IP → 兩個比對引擎分析並對照 → 印出測試結果表
 #
 # 用法（在專案根目錄或任何地方都可以）：
@@ -63,16 +63,16 @@ else
   rec all T13 不通過 "見 logs/update.log（沒有網路時可略過）"
 fi
 
-collect() {  # collect <機器> <代號> <sudo:0/1>
-  local vm="$1" tag="$2" su="$3" pre=""
+collect() {  # collect <機器> <代號> <sudo:0/1> <放到哪個資料夾>
+  local vm="$1" tag="$2" su="$3" dir="$4" pre=""
   [ "$su" = 1 ] && pre="sudo -n "
   lxc exec "$vm" -- su - ubuntu -c "${pre}bash -s -- --tag $tag --stdout" \
-    < collect.sh > "$OUT/bundles/hc-$tag.tar.gz" 2> "$OUT/logs/collect-$tag.log"
+    < collect.sh > "$dir/hc-$tag.tar.gz" 2> "$OUT/logs/collect-$tag.log"
   local rc=$?
-  if [ $rc -eq 0 ] && [ "$(head -c2 "$OUT/bundles/hc-$tag.tar.gz" | od -An -tx1 | tr -d ' ')" = "1f8b" ]; then
+  if [ $rc -eq 0 ] && [ "$(head -c2 "$dir/hc-$tag.tar.gz" | od -An -tx1 | tr -d ' ')" = "1f8b" ]; then
     return 0
   fi
-  rm -f "$OUT/bundles/hc-$tag.tar.gz"
+  rm -f "$dir/hc-$tag.tar.gz"
   return 1
 }
 
@@ -108,12 +108,10 @@ for V in "${VERSIONS[@]}"; do
   lxc exec "$VM" -- sh -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -y -qq nginx' \
     > "$OUT/logs/apt-$V.log" 2>&1 || log "安裝失敗（可能沒有網路），繼續"
 
-  # T1、T6：一般使用者與 sudo
+  # T1：用 sudo 收集一次（和 hc 0.7.1 起的預設相同；代號 T-版本，一台測試機一列）
   lxc exec "$VM" -- sh -c 'rm -f /tmp/hc-marker; touch /tmp/hc-marker'; sleep 1
   t0=$(date +%s)
-  if collect "$VM" "T-$V-user" 0; then rec "$V" T1-一般使用者 通過 "$(( $(date +%s) - t0 )) 秒"; else rec "$V" T1-一般使用者 不通過 "見 logs/collect-T-$V-user.log"; fi
-  t0=$(date +%s)
-  if collect "$VM" "T-$V-sudo" 1; then rec "$V" T1-sudo 通過 "$(( $(date +%s) - t0 )) 秒"; else rec "$V" T1-sudo 不通過 "見 logs/collect-T-$V-sudo.log"; fi
+  if collect "$VM" "T-$V" 1 "$OUT/bundles"; then rec "$V" T1 通過 "sudo 收集 $(( $(date +%s) - t0 )) 秒"; else rec "$V" T1 不通過 "見 logs/collect-T-$V.log"; fi
 
   # T2：除了收集之外，有沒有寫入其他檔案
   lxc exec "$VM" -- sh -c 'find / -xdev -newer /tmp/hc-marker -type f 2>/dev/null | grep -v -e "^/proc" -e "^/sys" -e "^/tmp/hc-marker$"' \
@@ -126,16 +124,16 @@ for V in "${VERSIONS[@]}"; do
   if [ -n "$nic" ]; then
     lxc exec "$VM" -- ip link set "$nic" down
     t0=$(date +%s)
-    if collect "$VM" "T-$V-offline" 0; then rec "$V" T3 通過 "斷網收集 $(( $(date +%s) - t0 )) 秒"; else rec "$V" T3 不通過 "見 logs/collect-T-$V-offline.log"; fi
+    if collect "$VM" "T-$V-offline" 1 "$OUT/logs"; then rec "$V" T3 通過 "斷網收集 $(( $(date +%s) - t0 )) 秒"; else rec "$V" T3 不通過 "見 logs/collect-T-$V-offline.log"; fi
     lxc exec "$VM" -- ip link set "$nic" up
-    rm -f "$OUT/bundles/hc-T-$V-offline.tar.gz"   # 只用來計時，不進報告
+    rm -f "$OUT/logs/hc-T-$V-offline.tar.gz"   # 只用來計時，不進報告
   else
     rec "$V" T3 略過 "找不到預設網卡"
   fi
 
-  # T7：隱私（優先檢查 sudo 版，收得最多；沒有就用一般使用者版）
+  # T7：隱私
   pb=""
-  for k in sudo user; do [ -f "$OUT/bundles/hc-T-$V-$k.tar.gz" ] && { pb="$OUT/bundles/hc-T-$V-$k.tar.gz"; break; }; done
+  [ -f "$OUT/bundles/hc-T-$V.tar.gz" ] && pb="$OUT/bundles/hc-T-$V.tar.gz"
   hn=$(lxc exec "$VM" -- hostname 2>/dev/null | tr -d '[:space:]')
   if [ -z "$pb" ]; then
     rec "$V" T7 略過 "沒有收集檔可檢查"
@@ -155,7 +153,7 @@ done
 
 # 分析（T8、T10、T11、T15）
 B=$(ls "$OUT"/bundles/*.tar.gz 2>/dev/null)
-if [ -z "$B" ]; then echo "沒有任何收集檔，無法分析。"; else
+if [ -z "$B" ]; then echo "沒有任何收集檔，無法分析。"; rec all 健檢報告 不通過 "沒有任何收集檔，健檢報告沒有產生（見 logs/collect-T-*.log）"; else
   log "分析（引擎：$ENGINE）"
   python3 hc report $B --engine "$ENGINE" --update no --date "$(date +%Y-%m)" --out "$OUT/report" > "$OUT/logs/analyze.log" 2>&1
   python3 - "$OUT" "$ENGINE" <<'EOF' >> "$RES"
@@ -164,7 +162,7 @@ out, engine = sys.argv[1], sys.argv[2]
 import glob
 try:
     d = json.load(open(glob.glob(os.path.join(out, "report", "findings-ai-*.json"))[0], encoding="utf-8"))
-    # findings-ai 的代號是 H01、H02…；oval-detail.json 的主機順序相同、保留原代號，用來對回 -user／-sudo
+    # findings-ai 的代號是 H01、H02…；oval-detail.json 的主機順序相同、保留原代號（T-版本）
     tags = [x["tag"] for x in json.load(open(os.path.join(out, "report", "oval-detail.json"), encoding="utf-8"))]
     assert len(tags) == len(d["hosts"])
 except Exception as e:
@@ -177,17 +175,13 @@ for h, tag in zip(d["hosts"], tags):
     if e:
         same = not e["only_oscap"] and not e["only_builtin"]
         print("%s\tT10/T11-%s\t%s\tOpenSCAP %d 則、內建 %d 則" % (v, tag, "通過" if same else "不通過", e["oscap"], e["builtin"]))
-    if tag.endswith("-user"):
-        need = [x for x in h["unchecked"] if "sudo" in x]
-        print("%s\tT6\t%s\t一般使用者有 %d 項列為「未能檢查」（應為 SSH、防火牆、空密碼帳號）" % (v, "通過" if len(need) >= 2 else "記錄", len(need)))
-    if tag.endswith("-sudo"):
-        ssh_un = [x for x in h["unchecked"] if x.startswith("SSH")]
-        print("%s\tT12\t%s\t%s" % (v, "不通過" if ssh_un else "通過",
-                                    "用 sudo 仍讀不到 SSH 設定，見收集檔裡的 sshd.txt" if ssh_un else "用 sudo 讀到 SSH 設定"))
-        p = h["patches"]
-        print("%s\tT8-摘要\t人工核對\t%s；需 Pro %s、免費未套用 %s（%s）" % (v, h["support_text"], p["needs_pro"], p["free_not_applied"], p.get("unit", "")))
-        if v == "26.04":
-            print("%s\tT15\t%s\t維護狀態：%s" % (v, "通過" if h["support_status"] == "standard" else "不通過", h["support_text"]))
+    ssh_un = [x for x in h["unchecked"] if x.startswith("SSH")]
+    print("%s\tT12\t%s\t%s" % (v, "不通過" if ssh_un else "通過",
+                                "用 sudo 仍讀不到 SSH 設定，見收集檔裡的 sshd.txt" if ssh_un else "用 sudo 讀到 SSH 設定"))
+    p = h["patches"]
+    print("%s\tT8-摘要\t人工核對\t%s；需 Pro %s、免費未套用 %s（%s）" % (v, h["support_text"], p["needs_pro"], p["free_not_applied"], p.get("unit", "")))
+    if v == "26.04":
+        print("%s\tT15\t%s\t維護狀態：%s" % (v, "通過" if h["support_status"] == "standard" else "不通過", h["support_text"]))
 EOF
 fi
 
@@ -201,7 +195,9 @@ fi
   echo "|---|---|---|---|"
   awk -F'\t' '{printf "| %s | %s | %s | %s |\n", $1, $2, $3, $4}' "$RES"
   echo
-  echo "未自動化的項目：T8（人工核對報告內容）、T9（已註冊主機，需自行輸入 token）、T4／T5（請看 logs/security-status-*.txt 與收集檔中的 pro-api-updates.json）。"
+  echo "每台測試機只用 sudo 收集一次，健檢報告一台一列。"
+  echo
+  echo "未自動化的項目：T6（一般權限收集，要測請手動用 ./hc local --no-sudo）、T8（人工核對報告內容）、T9（已註冊主機，需自行輸入 token）、T4／T5（請看 logs/security-status-*.txt 與收集檔中的 pro-api-updates.json）。"
 } > "$OUT/RESULTS.md"
 cat "$OUT/RESULTS.md"
 echo

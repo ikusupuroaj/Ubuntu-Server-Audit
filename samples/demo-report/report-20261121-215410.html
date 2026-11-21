@@ -12,7 +12,7 @@ details{background:var(--card);border-radius:8px;padding:8px 12px;margin:10px 0}
 h4{font-size:15px;margin:18px 0 4px}code{font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--card);padding:1px 4px;border-radius:4px;word-break:break-all}
 </style></head><body><main>
 <h1>Ubuntu 主機資安健檢報告</h1>
-<p class="mut">受檢單位：示範單位（虛構）　執行單位：示範執行單位（虛構）　判斷基準月份：2026-11　分析程式：offline-ubuntu-healthcheck 0.7.0</p>
+<p class="mut">受檢單位：示範單位（虛構）　執行單位：示範執行單位（虛構）　判斷基準月份：2026-11　分析程式：offline-ubuntu-healthcheck 0.7.1</p>
 <h2>一、摘要</h2>
 <p>共 <b>3</b> 台主機，其中 <b>2</b> 台已過標準維護期；發現事項共 23 項，依「Ubuntu Pro 能否解決」分成四類。</p>
 <div class="cards">
@@ -26,7 +26,7 @@ h4{font-size:15px;margin:18px 0 4px}code{font:13px/1.5 ui-monospace,Menlo,Consol
 <tr><td><b>demo-web01</b></td><td>H02</td><td>Ubuntu 22.04.5 LTS</td><td>標準維護期內</td><td>1</td><td>1</td><td>1</td><td>3</td><td>2 則安全公告</td><td>77 則安全公告</td><td>5.15.0-125-generic</td><td>30</td></tr>
 <tr><td><b>demo-ap01</b></td><td>H03</td><td>Ubuntu 20.04.6 LTS</td><td>需 Pro（ESM）</td><td>2</td><td>2</td><td>1</td><td>6</td><td>52 則安全公告</td><td>74 則安全公告</td><td>5.4.0-150-generic</td><td>200</td></tr>
 </table></div><p class="mut">維護年限說明：LTS 版本標準維護 5 年（只涵蓋 Main 套件庫）；訂閱 Ubuntu Pro（ESM）共 10 年（含 Universe）；加購 Legacy 最長 15 年。</p>
-<p class="mut">交件代號是 findings-ai-20261121-142928.json（交給顧問分析的去識別化檔案）裡的主機代號；這張對照表只在本報告，請不要一起寄出。</p>
+<p class="mut">交件代號是 findings-ai-20261121-215410.json（交給顧問分析的去識別化檔案）裡的主機代號；這張對照表只在本報告，請不要一起寄出。</p>
 <h2>三、發現事項（依主機）</h2>
 <h3>demo-db01（Ubuntu 16.04.7 LTS）</h3>
 <p>維護狀態：ESM 已於 2026-05 結束；需 Ubuntu Pro 加購 Legacy，最長到 2031-05</p>
@@ -169,7 +169,7 @@ h4{font-size:15px;margin:18px 0 4px}code{font:13px/1.5 ui-monospace,Menlo,Consol
 </table></div></details></details>
 <h3>demo-web01（Ubuntu 22.04.5 LTS）</h3>
 <p>維護狀態：標準維護期內（到 2027-05）</p>
-<p class="mut">以一般使用者收集（預設）：SSH 設定、防火牆、空密碼帳號需要 sudo 才能檢查，列在「未能檢查」。</p>
+<p class="mut">以一般權限收集（加了 --no-sudo，或主機不能免密碼 sudo）：SSH 設定、防火牆、空密碼帳號需要 sudo 才能檢查，列在「未能檢查」。</p>
 <div class="tw"><table><tr><th>類別</th><th>嚴重度</th><th>發現</th><th>說明</th><th>建議</th><th>Pro 能否解決</th></tr>
 <tr><td><span class="tag tA">A</span></td><td>中</td><td>1 個套件的安全修補，要訂閱 Ubuntu Pro 才拿得到</td><td>要更新的套件：redis。對應 2 則官方安全公告，其中重大或高風險 0 則；修補放在 esm-apps（2 則），沒有訂閱的主機用 apt 也裝不到。主機上的 Ubuntu Pro 用戶端另外回報 1 個套件待取得，可互相對照</td><td>訂閱 Ubuntu Pro，在主機上執行 sudo pro attach 註冊，再執行 sudo apt update 與 sudo apt upgrade</td><td>是</td></tr>
 <tr><td><span class="tag tB">B</span></td><td>高</td><td>已安裝新核心，但機器還在跑舊核心</td><td>執行中：5.15.0-125-generic；已安裝最新：5.15.0-130-generic。核心修補要重開機才生效</td><td>排定時段重開機（sudo reboot）；若停機困難，Ubuntu Pro 的 Livepatch 可在不重開機下套用高風險核心修補</td><td>部分</td></tr>
@@ -461,7 +461,7 @@ h4{font-size:15px;margin:18px 0 4px}code{font:13px/1.5 ui-monospace,Menlo,Consol
 <tr><td>USN-6393-1 -- ImageMagick vulnerability</td><td>低</td><td>1</td><td>esm-apps</td></tr>
 <tr><td>USN-8155-2 -- OpenSSL vulnerabilities</td><td>低</td><td>4</td><td>esm-infra</td></tr>
 </table></div></details></details>
-<h2>四、建議處理順序</h2><ol><li>當天就能改、不用採購的高風險設定（demo-ap01）：SSH 允許 root 直接登入。</li><li>安裝已經可以取得的安全修補（demo-db01、demo-web01、demo-ap01）：在主機上執行 sudo apt update 與 sudo apt upgrade；含核心更新的要排時段重開機。只想先修重大與高風險時，見各主機的「重大與高風險公告」。</li><li>要訂閱 Ubuntu Pro 才拿得到修補的主機（demo-db01、demo-web01、demo-ap01）：評估訂閱 Ubuntu Pro 取得這些修補；已過標準維護期的主機，同時排定升級計畫。</li><li>修補要重開機才生效的主機（demo-db01、demo-web01、demo-ap01）：排定重開機時段；停機困難的，評估 Livepatch（只處理高風險與重大核心漏洞，不能取代所有重開機）。</li><li>其他設定與管理項目（demo-db01、demo-web01、demo-ap01）：SSH 允許密碼登入、未啟用自動安全更新、非 Ubuntu 官方來源的套件、主機防火牆（ufw）未啟用，依各項的建議排入例行維護。</li><li>需要設定基準的稽核證據時（demo-web01、demo-ap01）：評估 Ubuntu Pro 內含的 USG，並與適用的組態基準比對。</li><li>有項目未能檢查（demo-web01）：收集時權限不足或缺資料，不代表沒有問題；可加 --sudo 重新收集，或依各主機的說明補資料。</li></ol>
+<h2>四、建議處理順序</h2><ol><li>當天就能改、不用採購的高風險設定（demo-ap01）：SSH 允許 root 直接登入。</li><li>安裝已經可以取得的安全修補（demo-db01、demo-web01、demo-ap01）：在主機上執行 sudo apt update 與 sudo apt upgrade；含核心更新的要排時段重開機。只想先修重大與高風險時，見各主機的「重大與高風險公告」。</li><li>要訂閱 Ubuntu Pro 才拿得到修補的主機（demo-db01、demo-web01、demo-ap01）：評估訂閱 Ubuntu Pro 取得這些修補；已過標準維護期的主機，同時排定升級計畫。</li><li>修補要重開機才生效的主機（demo-db01、demo-web01、demo-ap01）：排定重開機時段；停機困難的，評估 Livepatch（只處理高風險與重大核心漏洞，不能取代所有重開機）。</li><li>其他設定與管理項目（demo-db01、demo-web01、demo-ap01）：SSH 允許密碼登入、未啟用自動安全更新、非 Ubuntu 官方來源的套件、主機防火牆（ufw）未啟用，依各項的建議排入例行維護。</li><li>需要設定基準的稽核證據時（demo-web01、demo-ap01）：評估 Ubuntu Pro 內含的 USG，並與適用的組態基準比對。</li><li>有項目未能檢查（demo-web01）：收集時權限不足或缺資料，不代表沒有問題；可確認主機帳號能用 sudo（免密碼）後重新收集，或依各主機的說明補資料。</li></ol>
 <h2>五、檢查範圍與限制</h2><ul><li>本健檢只讀取系統資訊，不做弱點利用測試、不修改設定，不等同滲透測試。</li><li>只涵蓋 Ubuntu 官方套件庫的套件；第三方軟體（例如自行安裝的應用程式）的弱點不在比對範圍。</li><li>官方弱點資料以「已安裝的套件版本」比對：舊核心套件若仍留在系統上，也可能被列入；實際執行中的核心請看 B 類。</li><li>建議欄的指令是一般做法，執行前請依單位的變更管理規定評估，並先在測試環境確認。</li><li>標示「未能檢查」的項目，代表收集時權限不足或主機沒有對應工具，不代表沒有問題。</li><li>結果反映收集當下的狀態，以及報告上所列官方資料日期之前公布的弱點。</li></ul>
 <h2>附錄：資料來源</h2>
 <p>比對引擎：內建比對（依官方 OVAL 的同一套判斷條件實作）</p>
