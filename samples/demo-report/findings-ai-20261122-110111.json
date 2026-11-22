@@ -1,8 +1,8 @@
 {
   "schema": "offline-ubuntu-healthcheck/0.7",
-  "tool_version": "0.7.3",
+  "tool_version": "0.7.4",
   "basis_month": "2026-11",
-  "generated_at": "20261122-030222",
+  "generated_at": "20261122-110111",
   "deidentified": true,
   "warnings": [],
   "engine": "內建比對（依官方 OVAL 的同一套判斷條件實作）",

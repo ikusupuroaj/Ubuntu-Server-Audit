@@ -1,6 +1,6 @@
 #!/bin/bash
 # Ubuntu-Server-Audit｜收集腳本（collect.sh）
-# 版本：0.5
+# 版本：0.7.4（和 hc、analyze.py 用同一個號碼；2026-11-22 起用 sudo 執行時，收集檔自動交還原帳號）
 #
 # 在受檢主機上執行，只讀取系統資訊，產出一個 tar.gz 交給分析電腦。
 # 弱點比對不在主機上做，主機上不需要安裝任何東西，也不需要連網。
@@ -106,7 +106,7 @@ read("/etc/ssh/sshd_config")
 for k,d in want.items(): print(k,got.get(k,d))'
 
 {
-  echo "collector_version=0.5"
+  echo "collector_version=0.7.4"
   echo "collected_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "tag=${TAG}"
   echo "uid=$(id -u)"
@@ -176,6 +176,16 @@ fi
 if [ "$TO_STDOUT" = 1 ]; then
   tar -czf - -C "$WORK" "$OUTNAME" || { echo "打包失敗" >&2; return 1; }
 elif tar -czf "./${OUTNAME}.tar.gz" -C "$WORK" "$OUTNAME"; then
+  # 用 sudo 執行時檔案會歸 root，一般帳號不好帶出來；改回下 sudo 的那個人，只有他能讀
+  if [ "$(id -u)" = 0 ] && [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ]; then
+    if chown "$SUDO_USER:$(id -gn "$SUDO_USER" 2>/dev/null || echo "$SUDO_USER")" "./${OUTNAME}.tar.gz" 2>/dev/null \
+       || chown "$SUDO_USER" "./${OUTNAME}.tar.gz" 2>/dev/null; then
+      chmod 600 "./${OUTNAME}.tar.gz"
+      echo "檔案擁有者已改成 ${SUDO_USER}，不用再執行 chown。"
+    else
+      echo "提醒：無法把檔案改成 ${SUDO_USER} 所有，請執行 sudo chown ${SUDO_USER} ./${OUTNAME}.tar.gz" >&2
+    fi
+  fi
   echo "完成：$(pwd)/${OUTNAME}.tar.gz"
   echo "請把這個檔案交給健檢執行人員。檔案內含套件清單與設定摘要，請依單位的資料分級規定保管。"
 else

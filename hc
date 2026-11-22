@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ubuntu-Server-Audit｜統一入口（hc）
 
-版本：0.7.3
+版本：0.7.4
 一個指令完成收集與分析。只用 Python 3.6 以上的標準函式庫。
 
 常用指令（都在 Ubuntu-Server-Audit 資料夾裡執行）：

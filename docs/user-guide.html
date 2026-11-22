@@ -76,7 +76,7 @@ figure.arch ol.legend li{padding-left:1.6em;text-indent:-1.6em}
 
 <section class="cover">
   <h1>Ubuntu 主機資安健檢工具<br>使用者手冊</h1>
-  <p class="sub">Ubuntu-Server-Audit 0.7.3</p>
+  <p class="sub">Ubuntu-Server-Audit 0.7.4</p>
   <p class="mut">2026 年 11 月</p>
   <p class="mut">工具下載：https://github.com/ikusupuroaj/Ubuntu-Server-Audit</p>
   <p class="mut" style="margin-top:40px">本工具不是 Canonical 的官方工具，與 Canonical 沒有隸屬關係，也沒有經過 Canonical 背書。Ubuntu 是 Canonical Ltd. 的商標。</p>
@@ -400,7 +400,7 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 
 <h3>情況三：只能請主機管理者自己收集</h3>
 <div class="step"><b class="n">1</b><div><p>把 <code>collect.sh</code> 這個檔案交給主機管理者。它就在 <code>Ubuntu-Server-Audit</code> 資料夾的最上層，用隨身碟或內部檔案分享都可以。</p></div></div>
-<div class="step"><b class="n">2</b><div><p>請管理者在主機上執行，<code>H01</code> 換成這台的代號：</p><pre>sudo bash collect.sh --tag H01</pre><p>沒有 sudo 權限時改用 <code>bash collect.sh --tag H01</code>，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p><p>完成後，目前的資料夾會多一個 <code>hc-H01-日期時間.tar.gz</code>。</p><p>用 sudo 產生的檔案只有系統管理員能讀，一般帳號複製不出來。先執行下面這行把檔案改成自己的，才複製得出來：</p><pre>sudo chown $USER hc-H01-*.tar.gz</pre><p>再把這個檔案複製出來：用隨身碟，或從分析電腦用 <code>scp admin@10.0.0.5:hc-H01-*.tar.gz .</code> 取回（<code>scp</code> 是經 SSH 複製檔案的指令，最後的點代表「放到目前的資料夾」）。</p></div></div>
+<div class="step"><b class="n">2</b><div><p>請管理者在主機上執行，<code>H01</code> 換成這台的代號：</p><pre>sudo bash collect.sh --tag H01</pre><p>沒有 sudo 權限時改用 <code>bash collect.sh --tag H01</code>，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p><p>完成後，目前的資料夾會多一個 <code>hc-H01-日期時間.tar.gz</code>。</p><p>用 sudo 執行時，這個檔案會自動改成執行 sudo 的那個帳號所有，畫面會出現「檔案擁有者已改成……」。不用再改權限，直接用一般帳號複製出來：用隨身碟，或從分析電腦用 <code>scp admin@10.0.0.5:hc-H01-*.tar.gz .</code> 取回（<code>scp</code> 是經 SSH 複製檔案的指令，最後的點代表「放到目前的資料夾」）。</p></div></div>
 <div class="step"><b class="n">3</b><div><p>把收集檔放進分析電腦的 <code>Ubuntu-Server-Audit</code> 資料夾（不用解壓縮），在資料夾裡執行：</p><pre>./hc report hc-H01-*.tar.gz</pre><p>多台一起分析，就把檔案都列上去，或用 <code>./hc report hc-*.tar.gz</code>。跑完時畫面最後會印出報告的位置，和情況一相同。</p></div></div>
 <div class="step"><b class="n">4</b><div><p>分析完，請管理者刪除主機上的 <code>collect.sh</code> 與 <code>hc-*.tar.gz</code>。</p></div></div>
 

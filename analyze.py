@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ubuntu-Server-Audit｜分析程式（analyze.py）
 
-版本：0.7.3
+版本：0.7.4
 在分析用的電腦執行（Python 3.6 以上，只用標準函式庫，不需連網）。
 
 用法：
@@ -43,13 +43,21 @@ import unicodedata
 import xml.etree.ElementTree as ET
 from html import escape as html_escape
 
-TOOL_VERSION = "0.7.3"
+TOOL_VERSION = "0.7.4"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 # ---------------------------------------------------------------------------
 # 1. 規則檔
 # ---------------------------------------------------------------------------
+
+def _ver_tuple(v):
+    """把 "0.7.3" 轉成 (0, 7, 3)，避免字串比較把 0.10 判成小於 0.5。"""
+    out = []
+    for x in str(v).split("."):
+        out.append(int(x) if x.isdigit() else 0)
+    return tuple(out)
+
 def deep_merge(base, over):
     for k, v in over.items():
         if isinstance(v, dict) and isinstance(base.get(k), dict):
@@ -795,7 +803,7 @@ def analyze_host(files, args, rules, datasets):
         if "sshd.txt" not in files:
             unchecked.append("SSH 設定（主機沒有安裝 SSH 服務）")
         elif meta.get("uid") == "0":
-            why = ("主機也沒有 python3 可改讀設定檔" if meta.get("collector_version", "0") >= "0.5"
+            why = ("主機也沒有 python3 可改讀設定檔" if _ver_tuple(meta.get("collector_version", "0")) >= (0, 5)
                    else "請改用 0.5 版以後的收集腳本，會改讀設定檔")
             unchecked.append("SSH 設定（已用 sudo，但 sshd -T 無法執行；%s%s）"
                              % (why, "。錯誤訊息：" + sshd_notes[0][:120] if sshd_notes else ""))
