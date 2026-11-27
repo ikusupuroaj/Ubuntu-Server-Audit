@@ -76,7 +76,7 @@ figure.arch ol.legend li{padding-left:1.6em;text-indent:-1.6em}
 
 <section class="cover">
   <h1>Ubuntu 主機資安健檢工具<br>使用者手冊</h1>
-  <p class="sub">Ubuntu-Server-Audit 0.8.0</p>
+  <p class="sub">Ubuntu-Server-Audit 0.8.1</p>
   <p class="mut">2026 年 11 月</p>
   <p class="mut">工具下載：https://github.com/ikusupuroaj/Ubuntu-Server-Audit</p>
   <p class="mut" style="margin-top:40px">本工具不是 Canonical 的官方工具，與 Canonical 沒有隸屬關係，也沒有經過 Canonical 背書。Ubuntu 是 Canonical Ltd. 的商標。</p>
@@ -255,13 +255,14 @@ sudo apt install -y libopenscap8        # 22.04 以前</pre>
 <p>這一章只有「分析電腦可以用 SSH 連到受檢主機」時才需要。只檢查分析電腦自己，或不能用 SSH 的話，直接跳到第 4 章的情況一或情況三。</p>
 
 <h3>3.1 建立主機清單 inventory.txt</h3>
-<p><b>最簡單的做法是用選單</b>：在工具資料夾裡輸入 <code>./hc</code>，選「2. 用 SSH 檢查多台主機」，再選「新增主機」，照畫面輸入主機的 IP、登入帳號、SSH 埠號與代號（不知道的直接按 Enter 用預設值）。選單會幫你寫好 <code>inventory.txt</code>，也可以在同一個畫面刪除主機。</p>
+<p><b>最簡單的做法是用選單</b>：在工具資料夾裡輸入 <code>./hc</code>，選「2. 用 SSH 檢查多台主機」，再選「新增主機」，照畫面輸入每台主機的代號、IP、登入帳號與 SSH 埠號（不知道的直接按 Enter 用預設值）。選單會幫你寫好 <code>inventory.txt</code>，也可以在同一個畫面刪除主機（第 4 章「用選單一步一步做」有完整畫面）。</p>
 <p>想自己編輯的話：</p>
 <div class="step"><b class="n">1</b><div><p>從範本複製一份：</p><pre>cp inventory.example.txt inventory.txt</pre></div></div>
 <div class="step"><b class="n">2</b><div>
 <p>用文字編輯器打開 <code>inventory.txt</code>，每行寫一台主機：「代號、空白、帳號@IP」。不知道用哪個編輯器的話，在終端機輸入 <code>nano inventory.txt</code>，改完按 Ctrl＋O、Enter 存檔，再按 Ctrl＋X 離開。</p>
 <pre>H01   admin@10.0.0.5
 H02   ops@10.0.0.6     -p 2222</pre>
+<p>第二行最後的 <code>-p 2222</code> 只有在那台主機的 SSH 不是 22 埠時才需要，一般主機不用寫。</p>
 <ul>
   <li><b>代號</b>：報告上顯示的名字，只能用英文字母、數字與 <code>. _ -</code>，每台要不同。</li>
   <li><b>帳號@IP</b>：建議寫 IP。寫主機名稱的話，要這台電腦查得到那個名稱才行。</li>
@@ -289,7 +290,70 @@ H02   ops@10.0.0.6     -p 2222</pre>
 
 <h2>4. 收集資料並產生報告</h2>
 <p>依你的情況選一種。三種做法只要都用 sudo 收集，產生的報告完全一樣。</p>
-<div class="note"><b>不想記指令的話</b>，在工具資料夾裡輸入 <code>./hc</code>（後面不加任何字），會出現選單：1 是情況一，2 是情況二，3 是情況三的分析步驟。每個問題直接按 Enter 就是括號裡的預設值，輸入 <code>0</code> 回上一層。做完會顯示報告的完整位置、問要不要用瀏覽器打開，最後一行告訴你同一件事的指令。</div>
+<h3>用選單一步一步做（建議第一次用的人）</h3>
+<p>不想記指令的話，用選單就能做完三種情況。先打開終端機，進到工具資料夾（也就是下載下來的 <code>Ubuntu-Server-Audit</code> 資料夾，<code>hc</code> 和 <code>collect.sh</code> 都在裡面），再輸入 <code>./hc</code>，後面不加任何字：</p>
+<pre>cd ~/Ubuntu-Server-Audit
+./hc</pre>
+<pre class="out">Ubuntu 健檢工具 0.8.1（非 Canonical 官方工具）
+工具資料夾：~/Ubuntu-Server-Audit（下載下來的 Ubuntu-Server-Audit 資料夾，hc 和 collect.sh 都在裡面）
+官方弱點資料：7 個版本，最舊的一份產生於 2026-11-26（1 天前）
+
+  1. 檢查這台電腦
+  2. 用 SSH 檢查多台主機
+  3. 分析別人交回來的收集檔
+  4. 更新官方弱點資料（要能上網）
+  5. 核對官方資料、查看日期（帶進離線環境後用）
+
+  0. 離開
+請輸入數字：</pre>
+<p>操作規則只有三條：</p>
+<ul>
+  <li>輸入數字再按 Enter 選擇。</li>
+  <li>問題後面的 <code>[ ]</code> 是預設值，直接按 Enter 就用它。<code>[Y/n]</code> 按 Enter 是「是」，<code>[y/N]</code> 按 Enter 是「否」。</li>
+  <li>任何地方輸入 <code>0</code> 都是取消或回上一層；在主選單輸入 <code>0</code> 是離開。</li>
+</ul>
+<p>每一項做完，畫面會顯示報告的完整位置。在桌面上開的終端機，還會問「要用瀏覽器打開報告嗎？」，按 Enter 就會打開。最後一行「下次可以直接打」是同一件事的指令，熟了以後可以不經過選單。</p>
+
+<p><b>選 1：檢查這台電腦（情況一）</b></p>
+<div class="step"><b class="n">1</b><div><p>「受檢單位名稱」可以直接按 Enter 跳過。</p></div></div>
+<div class="step"><b class="n">2</b><div><p>出現密碼提示時，輸入你登入這台電腦的密碼（畫面不會顯示），按 Enter。帳號沒有 sudo 權限的話，直接按 Enter 或 Ctrl＋C，工具會自動改用一般權限繼續：</p>
+<pre class="out">沒辦法使用 sudo，改用一般權限收集（SSH 設定、主機防火牆、空密碼帳號 3 項會列為「未能檢查」，其他項目照常檢查）。</pre></div></div>
+
+<p><b>選 2：用 SSH 檢查多台主機（情況二）</b></p>
+<div class="step"><b class="n">1</b><div><p>第一次用時還沒有主機清單，選單會直接帶你新增。每台依序問代號、IP、登入帳號、SSH 埠號，不知道的直接按 Enter：</p>
+<pre class="out">第 1 台
+代號（報告上顯示的名稱，不會出現 IP） [H01]：
+H01 的 IP 位址（或主機名稱）：10.28.93.227
+登入 H01 的帳號 [vincent]：ubuntu
+SSH 埠號（沒特別設定就是 22） [22]：
+  確認連得到 10.28.93.227 的 22 埠…
+  連得到。
+
+會寫進主機清單：H01    ubuntu@10.28.93.227
+確定新增嗎？ [Y/n]：
+要再新增一台嗎？ [y/N]：y</pre>
+<p>IP 打錯（例如某一段超過 255）會當場要求重打；連不到那台的 SSH 埠時，會提醒你確認 IP 有沒有打錯、主機有沒有開機。</p></div></div>
+<div class="step"><b class="n">2</b><div><p>全部新增完，選單問「要現在測試剛才新增的 N 台的 SSH 連線嗎？」，按 Enter。登不進去的主機會問你要不要放金鑰：</p>
+<pre class="out">  H02：無法登入：ubuntu@10.28.93.125: Permission denied (publickey,password).
+        帳號不對，或這台電腦的金鑰還沒放到主機上。
+        要把這台電腦的金鑰放到 H02 上嗎？（會問一次 ubuntu@10.28.93.125 的登入密碼） [Y/n]：</pre>
+<p>按 Enter 後會出現幾行英文（那是 <code>ssh-copy-id</code> 印的），看到 <code>password:</code> 時輸入那台主機的密碼。出現 post-quantum 的 WARNING，只代表那台主機的 SSH 版本比較舊，不影響使用。放好後會自動再測一次，看到「可以登入」就成功了。這台電腦還沒有金鑰的話，選單會先問要不要建立一把（3.2 節）。</p></div></div>
+<div class="step"><b class="n">3</b><div><p>測試完選單問「要開始掃描清單上的主機嗎？ [y/N]」。想先確認清單就直接按 Enter，回到主機清單畫面；要掃描就輸入 <code>y</code>。</p></div></div>
+<div class="step"><b class="n">4</b><div><p>主機清單畫面可以再新增、刪除主機，或選 4 重新測試。選「1. 開始掃描」時，工具會先逐台確認登得進去；有登不進去的，會問要不要跳過那幾台：</p>
+<pre class="out">有 1 台還登不進去：H03
+要跳過這 1 台，只掃描其他 2 台（H01、H02）嗎？ [y/N]：</pre>
+<p>報告只會有掃描成功的主機，畫面最後會列出哪幾台沒有列入。</p></div></div>
+
+<p><b>選 3：分析別人交回來的收集檔（情況三）</b></p>
+<div class="step"><b class="n">1</b><div><p>選單會自動列出工具資料夾和「下載」資料夾（<code>~/Downloads</code>、<code>~/下載</code>）裡的收集檔：</p>
+<pre class="out">在 ~/Ubuntu-Server-Audit、~/Downloads 找到 1 個收集檔：
+  1. ~/Downloads/hc-H03-20261127-142253.tar.gz
+要分析哪些？（直接按 Enter＝全部；或輸入編號，例如 1,3；或輸入檔案位置）：</pre></div></div>
+<div class="step"><b class="n">2</b><div><p>檔案放在別的地方時，輸入完整路徑。在 Ubuntu 桌面上開的終端機，也可以直接把檔案從檔案管理員拖進終端機視窗，會自動貼上路徑，再按 Enter。用 SSH 從別台電腦連進來時，拖進去的是那台電腦的路徑，這招就不能用。</p></div></div>
+
+<p><b>選 4、5：更新與核對官方資料</b>：選 4 按 Enter 下載全部版本，通常要幾分鐘（實測約 10 分鐘）；有版本失敗時，會問要不要改從 GitHub 副本下載。選 5 核對資料，每個版本都是「一致」才正常（2.3 節）。</p>
+
+<p>以下是每種情況直接打指令的做法，和選單做的事一樣。</p>
 
 <h3>情況一：只想檢查分析電腦自己</h3>
 <p>要檢查的 Ubuntu 主機就是你正在用的這台。收集和分析都在這台完成，不需要 SSH，也不需要第 3 章的主機清單。</p>

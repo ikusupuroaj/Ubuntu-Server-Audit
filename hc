@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ubuntu-Server-Audit｜統一入口（hc）
 
-版本：0.8.0
+版本：0.8.1
 一個指令完成收集與分析。只用 Python 3.6 以上的標準函式庫。
 
 不熟指令的話，直接輸入 ./hc（後面不加任何字）會出現選單，一步一步帶你做完。
@@ -21,7 +21,7 @@
 
 主機清單 inventory.txt 每行一台：「代號  帳號@IP  [其他 ssh 參數]」，例如：
   H01  admin@10.0.0.5
-  H02  ops@10.0.0.6 -p 2222
+  H02  ops@10.0.0.6 -p 2222      ← 「-p 2222」只有 SSH 不是 22 埠時才需要
 「#」開頭是註解。代號會出現在報告上，帳號與 IP 不會。範本：inventory.example.txt。
 0.7 以前的 hosts.txt 照樣可以用：./hc scan hosts.txt
 
@@ -34,8 +34,10 @@ import datetime
 import importlib.util
 import re
 import os
+import ipaddress
 import shlex
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -350,8 +352,10 @@ def ssh_hint(err, target, extra=()):
                 "\n        向主機管理者確認是同一台主機後，執行 ssh-keygen -R %s 刪掉舊紀錄，再用 %s 登入一次並回答 yes。"
                 "\n        無法確認原因時不要刪，請先通報資安人員（見使用者手冊 7.2 節）。" % (key, login))
     if "permission denied" in e:
+        if IN_MENU:
+            return "\n        帳號或金鑰不對。回到主機清單選「4. 測試 SSH 連線」，可以讓工具幫你把金鑰放到主機上。"
         return ("\n        帳號或金鑰不對。請先確認 %s 能不用密碼登入（見使用者手冊 3.2 節）；"
-                "\n        也可以在選單（./hc）的「測試 SSH 連線」裡，讓工具幫你把金鑰放到主機上。" % login)
+                "\n        也可以輸入 ./hc 開啟選單，在「2. 用 SSH 檢查多台主機」→「4. 測試 SSH 連線」讓工具幫你放金鑰。" % login)
     if "could not resolve hostname" in e:
         return "\n        找不到這個主機名稱，請改寫 IP 位址。"
     if "timed out" in e or "no route to host" in e or "connection refused" in e:
@@ -382,11 +386,14 @@ def cmd_scan(args, rules):
                  "或複製範本再修改：cp %s %s" % (tilde(args.hosts), shlex.quote(os.path.join(HERE, "inventory.example.txt")),
                                                 shlex.quote(args.hosts)))
     hosts = parse_hosts(args.hosts)
+    if args.only:  # 選單用：跳過登不進去的主機
+        keep = set(args.only.split(","))
+        hosts = [h for h in hosts if h[0] in keep]
     preflight_data(args, rules)
     cdir = collected_dir(args)
     os.makedirs(cdir, exist_ok=True)
     print("開始收集 %d 台主機（收集檔存放在 %s，內含套件清單，請妥善保管）" % (len(hosts), cdir))
-    bundles = []
+    bundles, failed = [], []
     for i, (tag, target, extra) in enumerate(hosts, 1):
         path = os.path.join(cdir, "hc-%s.tar.gz" % tag)
         remote = "bash -s -- --tag %s --stdout" % shlex.quote(tag)
@@ -406,11 +413,16 @@ def cmd_scan(args, rules):
         print("  [%d/%d] %s：%s%s" % (i, len(hosts), tag, ("完成，%d 秒" % (time.time() - t0)) if ok else "失敗：" + err, note))
         if ok:
             bundles.append(path)
-        elif os.path.exists(path):
-            os.remove(path)
+        else:
+            failed.append(tag)
+            if os.path.exists(path):
+                os.remove(path)
     if not bundles:
         sys.exit("沒有任何主機收集成功。請先確認能用 ssh 登入，例如：ssh %s" % hosts[0][1])
     finish(A.load_inputs(bundles), args, rules)
+    if failed:
+        print("注意：清單上 %d 台，其中 %d 台沒有收集成功，沒有列入這份報告：%s（原因見上方「失敗」那幾行）"
+              % (len(hosts), len(failed), "、".join(failed)))
 
 
 def cmd_report(args, rules):
@@ -422,6 +434,7 @@ def cmd_report(args, rules):
     finish(loaded, args, rules)
 
 
+IN_MENU = False  # 從選單執行時為 True
 NO_SUDO_NOTE = "SSH 設定、主機防火牆、空密碼帳號 3 項會列為「未能檢查」，其他項目照常檢查"
 
 
@@ -456,7 +469,9 @@ def cmd_local(args, rules):
     if use_sudo and not sudo_ready():
         use_sudo = False
         args.sudo_fallback = True
-        print("沒辦法使用 sudo，改用一般權限收集（%s）。\n下次可以直接打：./hc local --no-sudo，就不會再問密碼。" % NO_SUDO_NOTE)
+        print("沒辦法使用 sudo，改用一般權限收集（%s）。" % NO_SUDO_NOTE)
+        if not IN_MENU:  # 選單最後會印「下次可以直接打」，這裡不重複
+            print("下次可以直接打：./hc local --no-sudo，就不會再問密碼。")
     cmd = (["sudo"] if use_sudo else []) + ["bash", COLLECT, "--tag", args.tag, "--stdout"]
     print("收集本機資料%s…" % ("（使用 sudo）" if use_sudo else "（一般權限）"))
     ok, err = collect_via(cmd, path, use_stdin=False)
@@ -521,6 +536,7 @@ def build_parser():
     p1.add_argument("--no-sudo", action="store_true",
                     help="不用 sudo，只用一般權限收集。預設會用 sudo -n 收集；主機沒有設定免密碼 sudo 時自動改用一般權限")
     p1.add_argument("--sudo", action="store_true", help=argparse.SUPPRESS)  # 0.7.0 以前的寫法，現在是預設，保留不報錯
+    p1.add_argument("--only", default="", help=argparse.SUPPRESS)  # 選單用：只掃這些代號（逗號分隔）
     p2 = zh(sub.add_parser("report", prog="hc report", help="分析主機管理者交回來的收集檔", **kw),
             ["./hc report hc-H01-*.tar.gz", "./hc report hc-H01-*.tar.gz hc-H02-*.tar.gz"])
     p2.add_argument("bundles", nargs="+", metavar="BUNDLE", help="主機上 collect.sh 產生的 hc-*.tar.gz（不用解壓縮，可一次給多個）")
@@ -672,6 +688,8 @@ def data_line(rules):
 
 
 def menu(ap):
+    global IN_MENU
+    IN_MENU = True
     os.chdir(HERE)  # 主機清單、報告都放在工具資料夾裡，路徑才固定
     settings = load_settings()
     rules = A.load_rules(None)
@@ -684,27 +702,29 @@ def menu(ap):
              ("5", "核對官方資料、查看日期（帶進離線環境後用）", menu_verify)]
     while True:
         print("\nUbuntu 健檢工具 %s（非 Canonical 官方工具）" % A.TOOL_VERSION)
-        print("工具資料夾：%s" % tilde(HERE))
+        print("工具資料夾：%s（下載下來的 Ubuntu-Server-Audit 資料夾，hc 和 collect.sh 都在裡面）" % tilde(HERE))
         print(data_line(rules))
         print()
         for k, label, _ in items:
             print("  %s. %s" % (k, label))
-        print("\n  q. 離開")
+        print("\n  0. 離開")
         try:
             ans = input("請輸入數字：").strip().lower()
         except (EOFError, KeyboardInterrupt):
             print()
             return 0
-        if ans in ("q", "quit", "exit"):
+        if ans in ("0", "q", "quit", "exit"):
             return 0
         fn = next((f for k, _, f in items if k == ans), None)
         if not fn:
             if ans:
-                print("沒有「%s」這個選項，請輸入 1～5 或 q。" % ans)
+                print("沒有「%s」這個選項，請輸入 0～5。" % ans)
             continue
         try:
-            fn(ap, settings)
+            if fn(ap, settings) == BACK:
+                continue
         except Back:
+            print("已取消。")
             continue
         except KeyboardInterrupt:
             print("\n已取消。")
@@ -719,8 +739,7 @@ def ask_agency():
 
 def menu_local(ap, settings):
     print("\n檢查這台電腦")
-    print("會先試著用 sudo（系統管理員權限）收集，檢查最完整，可能會問你登入這台電腦的密碼。\n"
-          "沒有 sudo 權限的話，按 Ctrl+C 跳過，會自動改用一般權限（%s）。" % NO_SUDO_NOTE)
+    print("會先試著用 sudo（系統管理員權限）收集，檢查最完整；不能用 sudo 時，會自動改用一般權限。")
     argv = ["local"] + ask_agency()
     args = run_cmd(ap, argv)
     if args:
@@ -773,49 +792,106 @@ def choose_inventory():
     return OLD_INVENTORY
 
 
+BACK = "back"  # 選單函式回傳這個：使用者選了「0. 回主選單」，不用再按 Enter
+
+
 def menu_scan(ap, settings):
     inv = choose_inventory()
     while True:
         hosts, bad = read_inventory(inv)
         print("\n用 SSH 檢查多台主機")
         print("主機清單：%s" % tilde(inv))
-        if not os.path.isfile(inv):
-            print("  還沒有主機清單，先新增第一台主機。")
-            add_host(inv, [])  # 輸入 0 取消就回主選單
-            continue
-        if hosts:
-            print("  目前 %d 台：" % len(hosts))
-            for i, (_, tag, target, extra) in enumerate(hosts, 1):
-                print("    %d. %s" % (i, inv_line(tag, target, extra)))
-        else:
-            print("  清單裡還沒有主機。")
-        if bad:
-            print("  注意：第 %s 行格式看不懂（應為「代號 帳號@IP」），掃描前請用文字編輯器修正。" % "、".join(map(str, bad)))
-        print("\n  1. 開始掃描\n  2. 新增主機\n  3. 刪除主機\n  4. 測試 SSH 連線\n  0. 回主選單")
-        ans = prompt("請輸入數字：")
-        if ans == "1":
-            if not hosts:
-                print("清單裡還沒有主機，請先選 2 新增。")
-                continue
-            if not yes("要開始掃描這 %d 台主機嗎？" % len(hosts)):
-                continue
-            argv = ["scan"] + ([] if inv == INVENTORY else [inv]) + ask_agency()
-            args = run_cmd(ap, argv)
-            if args:
-                after_report(args, argv, settings)
-            return
         try:
-            if ans == "2":
-                add_host(inv, hosts)
+            if not os.path.isfile(inv):
+                print("  還沒有主機清單，先新增第一台主機。")
+                res = add_host(inv, [])
+                if res and start_scan(ap, settings, inv, *res):
+                    return
+                continue
+            if hosts:
+                print("  目前 %d 台：" % len(hosts))
+                for i, (_, tag, target, extra) in enumerate(hosts, 1):
+                    print("    %d. %s" % (i, inv_line(tag, target, extra)))
+            else:
+                print("  清單裡還沒有主機。")
+            if bad:
+                print("  注意：第 %s 行格式看不懂（應為「代號 帳號@IP」），掃描前請用文字編輯器修正。" % "、".join(map(str, bad)))
+            print("\n  1. 開始掃描\n  2. 新增主機\n  3. 刪除主機\n  4. 測試 SSH 連線\n  0. 回主選單")
+            try:
+                ans = prompt("請輸入數字：")
+            except Back:
+                return BACK
+            if ans == "1":
+                if not hosts:
+                    print("清單裡還沒有主機，請先選 2 新增。")
+                    continue
+                print("\n開始掃描前，先逐台確認登得進去。")
+                if start_scan(ap, settings, inv, test_hosts(hosts), [], ask=False):
+                    return
+            elif ans == "2":
+                res = add_host(inv, hosts)
+                if res and start_scan(ap, settings, inv, *res):
+                    return
             elif ans == "3":
                 del_host(inv, hosts)
             elif ans == "4":
-                test_hosts(hosts)
-        except Back:  # 新增、刪除到一半輸入 0：回到主機清單
+                failed = test_hosts(hosts)
+                if hosts and start_scan(ap, settings, inv, failed, []):
+                    return
+            elif ans:
+                print("沒有「%s」這個選項，請輸入 0～4。" % ans)
+        except Back:  # 新增、刪除、測試到一半輸入 0：回到主機清單
             print("已取消。")
-            continue
-        if ans and ans not in ("2", "3", "4"):
-            print("沒有「%s」這個選項。" % ans)
+
+
+def start_scan(ap, settings, inv, failed, tested, ask=True):
+    """SSH 測試做完後接著掃描。failed：登不進去的代號；tested：已經測過的代號（其餘的掃描前先測）。
+    ask=True 時先問要不要開始（預設不要）。回傳有沒有掃描。"""
+    if ask and not yes("要開始掃描清單上的主機嗎？", default_yes=False):
+        return False
+    hosts, _ = read_inventory(inv)
+    if tested:  # 剛新增、測過的那幾台以外，其他主機掃描前也確認一次
+        rest = [h for h in hosts if h[1] not in tested]
+        if rest:
+            print("\n也確認一下清單上其他 %d 台：" % len(rest))
+            failed = failed + test_hosts(rest)
+    only = []
+    if failed:
+        ok = [h[1] for h in hosts if h[1] not in failed]
+        print("\n有 %d 台還登不進去：%s" % (len(failed), "、".join(failed)))
+        if not ok:
+            print("沒有能登入的主機，沒有開始掃描。請照上面的說明處理，再選 4 測試一次。")
+            return False
+        if not yes("要跳過這 %d 台，只掃描其他 %d 台（%s）嗎？" % (len(failed), len(ok), "、".join(ok)), default_yes=False):
+            print("沒有開始掃描。")
+            return False
+        only = ["--only", ",".join(ok)]
+    argv = ["scan"] + ([] if inv == INVENTORY else [inv]) + ask_agency()
+    args = run_cmd(ap, argv + only)
+    if args:
+        if failed:
+            print("這次跳過、沒有列入報告：%s" % "、".join(failed))
+        after_report(args, argv, settings)
+    return True
+
+
+def valid_host(host):
+    """IP 照 IPv4 規則檢查（四段、每段 0～255）；不是全數字的當成主機名稱。"""
+    if re.match(r"^[0-9.]+$", host):
+        try:
+            ipaddress.IPv4Address(host)
+            return True
+        except ValueError:
+            return False
+    return bool(HOST_RX.match(host))
+
+
+def port_open(host, port, timeout=3):
+    try:
+        socket.create_connection((host, int(port)), timeout).close()
+        return True
+    except (OSError, ValueError):
+        return False
 
 
 HOST_RX = re.compile(r"^[A-Za-z0-9.:_\[\]-]+$")
@@ -823,56 +899,73 @@ USER_RX = re.compile(r"^[A-Za-z0-9._][A-Za-z0-9._-]*$")
 
 
 def add_host(inv, hosts):
-    print("\n新增主機（直接按 Enter 用括號裡的預設值；輸入 0 取消）")
-    while True:
-        host = prompt("主機的 IP 位址（或主機名稱）：")
-        if HOST_RX.match(host):
-            break
-        print("  請輸入 IP，例如 10.0.0.5（不要有空白或 @）")
-    last_user = hosts[-1][2].split("@")[0] if hosts and "@" in hosts[-1][2] else ""
+    """一台一台問：代號 → IP → 帳號 → 埠號，寫進清單後問要不要再加一台；全部加完再一起測連線。"""
     import getpass
+    print("\n新增主機（直接按 Enter 用括號裡的預設值；輸入 0 取消）")
+    hosts, added = list(hosts), []
     while True:
-        user = prompt("登入這台主機的帳號：", last_user or getpass.getuser())
-        if USER_RX.match(user):
-            break
-        print("  帳號只能有英文字母、數字與 . _ -")
-    while True:
-        port = prompt("SSH 埠號（沒特別設定就是 22）：", "22")
-        if port.isdigit() and 0 < int(port) < 65536:
-            break
-        print("  請輸入 1～65535 的數字")
-    used = {h[1] for h in hosts}
-    n = len(hosts) + 1
-    while "H%02d" % n in used:
-        n += 1
-    while True:
-        tag = prompt("代號（報告上顯示的名稱，不會出現 IP）：", "H%02d" % n)
-        if not TAG_RX.match(tag):
-            print("  代號只能用英文字母、數字與 . _ -（最多 40 字）")
-        elif tag in used:
-            print("  代號 %s 已經用過了，每台要不同" % tag)
+        used = {h[1] for h in hosts}
+        n = len(hosts) + 1
+        while "H%02d" % n in used:
+            n += 1
+        print("\n第 %d 台" % (len(hosts) + 1))
+        while True:
+            tag = prompt("代號（報告上顯示的名稱，不會出現 IP）：", "H%02d" % n)
+            if not TAG_RX.match(tag):
+                print("  代號只能用英文字母、數字與 . _ -（最多 40 字）")
+            elif tag in used:
+                print("  代號 %s 已經用過了，每台要不同" % tag)
+            else:
+                break
+        last_user = hosts[-1][2].split("@")[0] if hosts and "@" in hosts[-1][2] else ""
+        while True:
+            while True:
+                host = prompt("%s 的 IP 位址（或主機名稱）：" % tag)
+                if valid_host(host):
+                    break
+                print("  IP 格式不對：要是四段 0～255 的數字，例如 10.0.0.5（不要有空白或 @）")
+            while True:
+                user = prompt("登入 %s 的帳號：" % tag, last_user or getpass.getuser())
+                if USER_RX.match(user):
+                    break
+                print("  帳號只能有英文字母、數字與 . _ -")
+            while True:
+                port = prompt("SSH 埠號（沒特別設定就是 22）：", "22")
+                if port.isdigit() and 0 < int(port) < 65536:
+                    break
+                print("  請輸入 1～65535 的數字")
+            print("  確認連得到 %s 的 %s 埠…" % (host, port))
+            if port_open(host, port):
+                print("  連得到。")
+                break
+            print("  連不到 %s 的 %s 埠（3 秒內沒有回應）。常見原因：IP 打錯、主機沒開機、SSH 沒有啟動或被防火牆擋住。" % (host, port))
+            if not yes("要重新輸入 IP 與埠號嗎？（選 n 就照樣新增）"):
+                break
+        extra = ["-p", port] if port != "22" else []
+        target = "%s@%s" % (user, host)
+        line = inv_line(tag, target, extra)
+        print("\n會寫進主機清單：%s" % line)
+        if yes("確定新增嗎？"):
+            new = not os.path.isfile(inv)
+            with open(inv, "a", encoding="utf-8") as f:
+                if new:
+                    f.write(INV_HEADER + "\n")
+                else:
+                    with open(inv, encoding="utf-8") as r:
+                        txt = r.read()
+                    if txt and not txt.endswith("\n"):
+                        f.write("\n")
+                f.write(line + "\n")
+            print("已新增到 %s（目前 %d 台）" % (tilde(inv), len(hosts) + 1))
+            hosts.append((0, tag, target, extra))
+            added.append((0, tag, target, extra))
         else:
+            print("這台沒有新增。")
+        if not yes("要再新增一台嗎？", default_yes=False):
             break
-    extra = ["-p", port] if port != "22" else []
-    target = "%s@%s" % (user, host)
-    line = inv_line(tag, target, extra)
-    print("\n會寫進主機清單：%s" % line)
-    if not yes("確定新增嗎？"):
-        print("沒有新增。")
-        return
-    new = not os.path.isfile(inv)
-    with open(inv, "a", encoding="utf-8") as f:
-        if new:
-            f.write(INV_HEADER + "\n")
-        else:
-            with open(inv, encoding="utf-8") as r:
-                txt = r.read()
-            if txt and not txt.endswith("\n"):
-                f.write("\n")
-        f.write(line + "\n")
-    print("已新增到 %s" % tilde(inv))
-    if yes("要現在測試這台的 SSH 連線嗎？"):
-        test_hosts([(0, tag, target, extra)])
+    if added and yes("要現在測試剛才新增的 %d 台的 SSH 連線嗎？" % len(added)):
+        return test_hosts(added), [h[1] for h in added]  # 測完接著問要不要掃描
+    return None
 
 
 def del_host(inv, hosts):
@@ -901,54 +994,61 @@ def has_ssh_key():
 
 
 def test_hosts(hosts):
-    """逐台試 SSH 登入（不用密碼）與免密碼 sudo；登入不了時可以幫忙放金鑰。"""
+    """逐台試 SSH 登入（不用密碼）與免密碼 sudo；登入不了時可以幫忙放金鑰。回傳最後仍登不進去的主機。"""
     if not hosts:
         print("清單裡沒有主機。")
-        return
+        return []
     print("\n測試 SSH 連線（每台最多等 15 秒；第一次連線的主機，會記下它的識別碼）")
-    for _, tag, target, extra in hosts:
-        base = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "-o", "StrictHostKeyChecking=accept-new"] + extra + [target]
-        try:
-            p = subprocess.run(base + ["sudo -n true >/dev/null 2>&1 && echo SUDO_OK || echo SUDO_NO"],
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=40)
-            out = p.stdout.decode("utf-8", "replace")
-            err = p.stderr.decode("utf-8", "replace").strip()
-            rc = p.returncode
-        except subprocess.TimeoutExpired:
-            out, err, rc = "", "連線逾時（超過 40 秒）", 1
-        except OSError as e:
-            out, err, rc = "", str(e), 1
-        if rc == 0 and "SUDO_" in out:
-            print("  %s：可以登入。%s" % (tag, "有免密碼 sudo，檢查最完整。" if "SUDO_OK" in out else
-                                    "沒有免密碼 sudo，會用一般權限收集（%s）。要完整檢查，請主機管理者設定免密碼 sudo。" % NO_SUDO_NOTE))
-            continue
-        last = err.splitlines()[-1] if err else "結束碼 %d" % rc
-        if "permission denied" in last.lower():
-            print("  %s：無法登入：%s\n        帳號不對，或這台電腦的金鑰還沒放到主機上。" % (tag, last))
-            offer_key(tag, target, extra)
-        else:
-            print("  %s：無法登入：%s%s" % (tag, last, ssh_hint(last, target, extra)))
+    return [h[1] for h in hosts if not ssh_ok(h)]
+
+
+def ssh_ok(h):
+    """試一台；登入被拒時問要不要放金鑰，放好再試一次。回傳最後能不能登入。"""
+    _, tag, target, extra = h
+    base = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "-o", "StrictHostKeyChecking=accept-new"] + extra + [target]
+    try:
+        p = subprocess.run(base + ["sudo -n true >/dev/null 2>&1 && echo SUDO_OK || echo SUDO_NO"],
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=40)
+        out = p.stdout.decode("utf-8", "replace")
+        err = p.stderr.decode("utf-8", "replace").strip()
+        rc = p.returncode
+    except subprocess.TimeoutExpired:
+        out, err, rc = "", "連線逾時（超過 40 秒）", 1
+    except OSError as e:
+        out, err, rc = "", str(e), 1
+    if rc == 0 and "SUDO_" in out:
+        print("  %s：可以登入。%s" % (tag, "有免密碼 sudo，檢查最完整。" if "SUDO_OK" in out else
+                                "沒有免密碼 sudo，會用一般權限收集（%s）。要完整檢查，請主機管理者設定免密碼 sudo。" % NO_SUDO_NOTE))
+        return True
+    last = err.splitlines()[-1] if err else "結束碼 %d" % rc
+    if "permission denied" in last.lower():
+        print("  %s：無法登入：%s\n        帳號不對，或這台電腦的金鑰還沒放到主機上。" % (tag, last))
+        return offer_key(tag, target, extra)
+    print("  %s：無法登入：%s%s" % (tag, last, ssh_hint(last, target, extra)))
+    return False
 
 
 def offer_key(tag, target, extra):
-    """登入被拒時：沒有金鑰就先建立，再用 ssh-copy-id 放到主機上（會問一次主機密碼）。"""
+    """登入被拒時：沒有金鑰就先建立，再用 ssh-copy-id 放到主機上（會問一次主機密碼）。回傳放好後能不能登入。"""
     if not shutil.which("ssh-copy-id"):
-        return
+        return False
     if not has_ssh_key():
         print("        這台電腦還沒有 SSH 金鑰。")
         if not yes("        要現在建立嗎？（建立時問的 passphrase，直接按 Enter 就是不設）"):
-            return
+            return False
         if subprocess.run(["ssh-keygen", "-t", "ed25519"]).returncode != 0:
             print("        金鑰沒有建立成功。")
-            return
+            return False
     if not yes("        要把這台電腦的金鑰放到 %s 上嗎？（會問一次 %s 的登入密碼）" % (tag, target)):
         print("        可以之後自己執行：%s" % " ".join(["ssh-copy-id"] + [shlex.quote(x) for x in extra] + [target]))
-        return
+        return False
+    print("        接下來的英文訊息是 ssh-copy-id 印的。看到 password: 時輸入 %s 的密碼（畫面不會顯示）。\n"
+          "        如果出現 post-quantum 的 WARNING，代表那台主機的 SSH 版本比較舊，不影響使用。" % target)
     if subprocess.run(["ssh-copy-id"] + extra + [target]).returncode == 0:
         print("        已放好，重新測試一次：")
-        test_hosts([(0, tag, target, extra)])
-    else:
-        print("        沒有成功，請確認帳號與密碼，或請主機管理者協助。")
+        return ssh_ok((0, tag, target, extra))
+    print("        沒有成功，請確認帳號與密碼，或請主機管理者協助。")
+    return False
 
 
 # --- 分析收集檔 -------------------------------------------------------------
@@ -974,10 +1074,11 @@ def menu_report(ap, settings):
         print("在 %s 找到 %d 個收集檔：" % (where, len(found)))
         for i, p in enumerate(found, 1):
             print("  %d. %s" % (i, tilde(p)))
-        ans = prompt("要分析哪些？（直接按 Enter＝全部；或輸入編號，例如 1,3；或把檔案拖進這個視窗）：")
+        ans = prompt("要分析哪些？（直接按 Enter＝全部；或輸入編號，例如 1,3；或輸入檔案位置）：")
     else:
         print("在 %s 沒有找到收集檔。" % where)
-        print("請把收集檔複製到 %s/，再選一次 3；\n或直接把檔案拖進這個視窗（會自動貼上檔案位置），再按 Enter。" % tilde(HERE))
+        print("請把收集檔複製到 %s/，再選一次 3。\n"
+              "在這台電腦桌面上開的終端機，也可以直接把檔案拖進這個視窗（會自動貼上檔案位置），再按 Enter。" % tilde(HERE))
         ans = prompt("收集檔：")
         if not ans:
             return
