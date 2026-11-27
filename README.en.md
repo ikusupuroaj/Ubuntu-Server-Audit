@@ -25,13 +25,15 @@ cd Ubuntu-Server-Audit
 
 A plain `git clone` also fetches the `data` branch, which GitHub Actions refreshes daily from Canonical. `hc` copies it into `data/` on first run, so the tool works offline right away. Without git, download `Ubuntu-Server-Audit-full.zip` from the `data-latest` release (GitHub's "Download ZIP" and `git clone --depth 1` do not include the data).
 
+Run `./hc` with no arguments for a guided menu (Traditional Chinese): check this machine, scan hosts over SSH (the menu builds `inventory.txt` for you and can test SSH logins and install your key), analyse returned collector files, update or verify the official data. The commands below do the same things directly.
+
 | Situation | Command |
 |---|---|
 | Check this machine only (Ubuntu) | `./hc local` |
-| This machine can SSH to the hosts | `cp hosts.example.txt hosts.txt`, edit it, then `./hc scan hosts.txt` |
+| This machine can SSH to the hosts | `cp inventory.example.txt inventory.txt`, edit it, then `./hc scan` (an older `hosts.txt` still works: `./hc scan hosts.txt`) |
 | Host owners run the collector themselves | on the host: `sudo bash collect.sh --tag H01`; then `./hc report hc-H01-*.tar.gz` |
 
-`./hc scan` pipes the collector over SSH and streams the result back, so the collector and its output are never written on the host (the Ubuntu Pro client and sudo still write their own logs). `hc local` and `hc scan` collect with sudo by default, which covers three extra checks (SSH config, ufw, empty passwords); add `--no-sudo` to skip sudo, and those three are listed as not checked. `hc local` asks for your sudo password; `hc scan` needs passwordless sudo on the hosts and otherwise falls back to a normal user. A collector file made with `sudo bash collect.sh` is handed back to the account that ran sudo, so it can be copied without changing permissions.
+`./hc scan` pipes the collector over SSH and streams the result back, so the collector and its output are never written on the host (the Ubuntu Pro client and sudo still write their own logs). `hc local` and `hc scan` collect with sudo by default, which covers three extra checks (SSH config, ufw, empty passwords); add `--no-sudo` to skip sudo, and those three are listed as not checked. `hc local` tries sudo first (asking for your password) and falls back to a normal user if sudo is unavailable or skipped with Ctrl+C; `hc scan` needs passwordless sudo on the hosts and otherwise falls back to a normal user. A collector file made with `sudo bash collect.sh` is handed back to the account that ran sudo, so it can be copied without changing permissions.
 
 Open `report-<timestamp>.html` in a browser for the full report. Each run writes to `reports/<timestamp>/`: the report, `findings-ai-<timestamp>.json` (de-identified results, only needed if you use the consultant service), `oval-detail.json` (full matching details) and, for `local` and `scan`, `collected/` (raw data from the hosts, including package lists; do not send it out). With `report`, the `hc-*.tar.gz` bundles you copied in hold the same raw data. Keep the report and `collected/` according to your organization's data rules.
 

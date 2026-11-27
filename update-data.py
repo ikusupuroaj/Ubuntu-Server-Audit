@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ubuntu-Server-Audit｜官方資料更新（update-data.py）
 
-版本：0.6
+版本：0.8.0
 在「能上網」的電腦執行（Python 3.6 以上，只用標準函式庫）。從 Canonical 官方網站下載
 套件清單版的 OVAL 弱點資料，並留下來源紀錄，方便帶進離線環境後核對。
 
@@ -330,7 +330,8 @@ def main():
                                  epilog="範例：\n  ./hc update                      下載全部 LTS 版本的最新資料\n"
                                         "  ./hc update --releases 20.04,22.04\n"
                                         "  ./hc update --from github        連不到 Canonical 官方網站時改用 GitHub 副本\n"
-                                        "  ./hc update --list               看目前資料的日期")
+                                        "  ./hc update --list               看目前資料的日期\n"
+                                        "  ./hc update --verify             帶進離線環境後，核對官方資料有沒有被改過或損毀")
     ap._optionals.title = "選項"
     ap.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS, help="顯示這份說明")
     ap.add_argument("--dest", default=os.path.join(HERE, "data"), help="存放資料的資料夾（預設：程式旁的 data/）")
@@ -371,7 +372,7 @@ def main():
         if rc:
             print("有版本沒有更新成功（見上方訊息），其餘已完成。資料夾：%s" % args.dest, file=sys.stderr)
         elif not args.quiet:
-            print("完成。資料夾：%s（帶進離線環境後，執行 --verify 核對）" % args.dest)
+            print("完成。資料夾：%s（帶進離線環境後，執行 ./hc update --verify 核對）" % args.dest)
         return rc
     src = load_sources(args.dest)
     if not args.quiet:
@@ -381,8 +382,11 @@ def main():
         if not download(c, args.dest, src, args.timeout, args.quiet):
             fail += 1
         save_sources(args.dest, src)
-    if not args.quiet:
-        print("完成。資料夾：%s（帶進離線環境後，執行 --verify 核對）" % args.dest)
+    if fail:
+        print("有 %d 個版本沒有更新成功（見上方訊息）。連不到 Canonical 官方網站時，可改用：./hc update --from github" % fail,
+              file=sys.stderr)
+    elif not args.quiet:
+        print("完成。資料夾：%s（帶進離線環境後，執行 ./hc update --verify 核對）" % args.dest)
     return 1 if fail else 0
 
 

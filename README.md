@@ -49,45 +49,74 @@ cd Ubuntu-Server-Audit
 
 用 `git clone` 下載時，每天更新的官方弱點資料會一起下載，第一次執行時自動放進 `data/`，帶進封閉環境也能直接用。電腦上沒有 git 的話，到 [Releases](https://github.com/ikusupuroaj/Ubuntu-Server-Audit/releases) 下載 `Ubuntu-Server-Audit-full.zip`，解壓縮後進到資料夾（不要用 GitHub 的「Download ZIP」，那樣拿不到資料）。
 
-接著依你的情況選一種：
+接著在工具資料夾裡輸入 `./hc`（後面不加任何字），會出現選單，照畫面一步一步做就好：
+
+```text
+Ubuntu 健檢工具 0.8.0（非 Canonical 官方工具）
+工具資料夾：~/Ubuntu-Server-Audit
+官方弱點資料：7 個版本，最舊的一份產生於 2026-11-26（1 天前）
+
+  1. 檢查這台電腦
+  2. 用 SSH 檢查多台主機
+  3. 分析別人交回來的收集檔
+  4. 更新官方弱點資料（要能上網）
+  5. 核對官方資料、查看日期（帶進離線環境後用）
+
+  q. 離開
+請輸入數字：
+```
+
+每個問題直接按 Enter 就是括號裡的預設值，輸入 `0` 回上一層。做完會顯示報告的完整位置，並問要不要用瀏覽器打開；最後一行會告訴你同一件事的指令，熟了以後可以直接打。
+
+習慣打指令的話，依你的情況選一種：
 
 | 情況 | 指令 |
 |---|---|
 | 只想檢查這台電腦自己（要是 Ubuntu） | `./hc local` |
-| 這台電腦可以 SSH 到要檢查的主機 | 先建好主機清單，再執行 `./hc scan hosts.txt` |
+| 這台電腦可以 SSH 到要檢查的主機 | 先建好主機清單 `inventory.txt`，再執行 `./hc scan` |
 | 只能請主機管理者自己跑，再把結果交給你 | 主機上：`sudo bash collect.sh --tag H01`<br>你的電腦：`./hc report hc-H01-*.tar.gz` |
 
-三種情況預設都用 sudo 收集。用 sudo 才能檢查 SSH 設定、主機防火牆、空密碼帳號三項；不想用 sudo 時，`./hc local`、`./hc scan` 後面加 `--no-sudo`，這三項會列在報告的「未能檢查」。
+用 sudo（系統管理員權限）才能檢查 SSH 設定、主機防火牆、空密碼帳號三項。`./hc local` 會先試 sudo，不能用就自動改一般權限；`./hc scan` 遇到沒設定免密碼 sudo 的主機，也會自動改一般權限。改用一般權限時，這三項會列在報告的「未能檢查」，其他項目照常檢查。一開始就不想用 sudo，在指令後面加 `--no-sudo`。
 
 ### 情況一：只想檢查這台電腦自己
 
-要檢查的 Ubuntu 主機就是你正在用的這台，收集和分析都在這台完成，不需要 SSH。在工具資料夾裡執行：
+要檢查的 Ubuntu 主機就是你正在用的這台，收集和分析都在這台完成，不需要 SSH。選單選 1，或在工具資料夾裡執行：
 
 ```bash
 ./hc local
 ```
 
-會詢問一次你這個帳號的 sudo 密碼。這個方式只能在 Ubuntu 上用：macOS 沒有 Ubuntu 的套件清單，沒有東西可以檢查。
+會詢問一次你這個帳號的登入密碼（sudo 用）。這個帳號沒有 sudo 權限的話，按 Ctrl＋C 跳過，工具會自動改用一般權限；之後想直接用一般權限、不再問密碼：
+
+```bash
+./hc local --no-sudo
+```
+
+這個方式只能在 Ubuntu 上用：macOS 沒有 Ubuntu 的套件清單，沒有東西可以檢查。
 
 ### 情況二：用 SSH 一次掃描多台主機
 
 ```mermaid
 flowchart LR
-  A["分析電腦<br>./hc scan hosts.txt"] -- "① 經 SSH 送入收集腳本" --> B["受檢主機<br>H01、H02…"]
+  A["分析電腦<br>./hc scan"] -- "① 經 SSH 送入收集腳本" --> B["受檢主機<br>H01、H02…"]
   B -- "② 收集結果傳回<br>（主機上不留收集檔）" --> A
   A -- "③ 與 data/ 的官方資料比對" --> C["reports/日期時間/<br>report-日期時間.html"]
 ```
 
 **前提**：分析電腦要能用 SSH 金鑰免密碼登入每台主機（設定方式見手冊 3.2 節），主機上的帳號最好能免密碼 sudo（請主機管理者設定；設不了也能跑，只是少檢查三項）。
 
-1. 在工具資料夾裡複製主機清單範本，再用文字編輯器打開（例：`nano hosts.txt`，改完按 Ctrl＋O 存檔、Ctrl＋X 離開）：
+**用選單（建議）**：選 2，照畫面輸入每台主機的 IP、登入帳號、SSH 埠號與代號，選單會幫你寫好主機清單 `inventory.txt`。選「測試 SSH 連線」可以先確認每台都登得進去、有沒有免密碼 sudo；登不進去時，選單可以幫你建立 SSH 金鑰並放到主機上（會問一次主機的登入密碼）。確認都沒問題，再選「開始掃描」。
+
+**自己編輯主機清單**：
+
+1. 在工具資料夾裡複製範本，再用文字編輯器打開（例：`nano inventory.txt`，改完按 Ctrl＋O 存檔、Ctrl＋X 離開）：
 
    ```bash
-   cp hosts.example.txt hosts.txt
-   nano hosts.txt
+   cp inventory.example.txt inventory.txt
+   nano inventory.txt
    ```
 
-2. 一行一台，格式是「代號　SSH 登入目標　［其他 ssh 參數，可省略］」：
+2. 一行一台，格式是「代號　帳號@IP　［其他 ssh 參數，可省略］」：
 
    ```text
    H01   admin@10.0.0.5
@@ -97,10 +126,10 @@ flowchart LR
 3. 執行：
 
    ```bash
-   ./hc scan hosts.txt
+   ./hc scan
    ```
 
-收集腳本經 SSH 送進主機執行，結果直接傳回這台電腦，主機上不會留下腳本或收集檔。報告上只會出現代號，不會出現 IP。
+收集腳本經 SSH 送進主機執行，結果直接傳回這台電腦，主機上不會留下腳本或收集檔。報告上只會出現代號，不會出現 IP。0.7 以前建立的 `hosts.txt` 照樣能用（`./hc scan hosts.txt`），選單看到它時會問要不要改名成 `inventory.txt`。
 
 ### 情況三：請主機管理者自己執行，再把結果交給你
 
@@ -181,6 +210,14 @@ flowchart LR
 | 每次掃描前先檢查新資料 | `scan`、`report`、`local` 後面加 `--refresh-data`（連不上就用已下載的，不中斷） |
 
 GitHub 上的資料由 GitHub Actions（GitHub 的自動排程）每天從 Canonical 官方網站取得，放在 `data` 分支（只保留最新一份）與 Releases 的 `data-latest`，檔案未經修改。細節見 [docs/offline-data.md](docs/offline-data.md)。
+
+## 選單設定
+
+選單的設定放在工具資料夾的 `settings.ini`，用文字編輯器改完存檔就生效：
+
+| 設定 | 預設 | 說明 |
+|---|---|---|
+| `ask_open_report` | `yes` | 產生報告後要不要問「要用瀏覽器打開報告嗎？」；改成 `no` 就不問，只顯示報告位置。沒有桌面的伺服器本來就不會問 |
 
 ## 其他文件
 

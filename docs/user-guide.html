@@ -76,7 +76,7 @@ figure.arch ol.legend li{padding-left:1.6em;text-indent:-1.6em}
 
 <section class="cover">
   <h1>Ubuntu 主機資安健檢工具<br>使用者手冊</h1>
-  <p class="sub">Ubuntu-Server-Audit 0.7.4</p>
+  <p class="sub">Ubuntu-Server-Audit 0.8.0</p>
   <p class="mut">2026 年 11 月</p>
   <p class="mut">工具下載：https://github.com/ikusupuroaj/Ubuntu-Server-Audit</p>
   <p class="mut" style="margin-top:40px">本工具不是 Canonical 的官方工具，與 Canonical 沒有隸屬關係，也沒有經過 Canonical 背書。Ubuntu 是 Canonical Ltd. 的商標。</p>
@@ -254,10 +254,12 @@ sudo apt install -y libopenscap8        # 22.04 以前</pre>
 <h2>3. 準備主機清單與 SSH 登入</h2>
 <p>這一章只有「分析電腦可以用 SSH 連到受檢主機」時才需要。只檢查分析電腦自己，或不能用 SSH 的話，直接跳到第 4 章的情況一或情況三。</p>
 
-<h3>3.1 建立主機清單 hosts.txt</h3>
-<div class="step"><b class="n">1</b><div><p>從範本複製一份：</p><pre>cp hosts.example.txt hosts.txt</pre></div></div>
+<h3>3.1 建立主機清單 inventory.txt</h3>
+<p><b>最簡單的做法是用選單</b>：在工具資料夾裡輸入 <code>./hc</code>，選「2. 用 SSH 檢查多台主機」，再選「新增主機」，照畫面輸入主機的 IP、登入帳號、SSH 埠號與代號（不知道的直接按 Enter 用預設值）。選單會幫你寫好 <code>inventory.txt</code>，也可以在同一個畫面刪除主機。</p>
+<p>想自己編輯的話：</p>
+<div class="step"><b class="n">1</b><div><p>從範本複製一份：</p><pre>cp inventory.example.txt inventory.txt</pre></div></div>
 <div class="step"><b class="n">2</b><div>
-<p>用文字編輯器打開 <code>hosts.txt</code>，每行寫一台主機：「代號、空白、帳號@IP」。不知道用哪個編輯器的話，在終端機輸入 <code>nano hosts.txt</code>，改完按 Ctrl＋O、Enter 存檔，再按 Ctrl＋X 離開。</p>
+<p>用文字編輯器打開 <code>inventory.txt</code>，每行寫一台主機：「代號、空白、帳號@IP」。不知道用哪個編輯器的話，在終端機輸入 <code>nano inventory.txt</code>，改完按 Ctrl＋O、Enter 存檔，再按 Ctrl＋X 離開。</p>
 <pre>H01   admin@10.0.0.5
 H02   ops@10.0.0.6     -p 2222</pre>
 <ul>
@@ -266,10 +268,12 @@ H02   ops@10.0.0.6     -p 2222</pre>
   <li>SSH 不是 22 埠時，在後面加 <code>-p 埠號</code>。</li>
 </ul>
 </div></div>
-<div class="note">報告上只會出現代號，不會出現 IP。<code>hosts.txt</code> 記著代號與 IP 的對照，請留在受檢單位，不要隨報告交出去。</div>
+<div class="note">0.7 以前的主機清單叫 <code>hosts.txt</code>，照樣能用（<code>./hc scan hosts.txt</code>）；選單看到它時會問要不要改名。</div>
+<div class="note">報告上只會出現代號，不會出現 IP。<code>inventory.txt</code> 記著代號與 IP 的對照，請留在受檢單位，不要隨報告交出去。</div>
 
 <h3>3.2 設定免密碼登入（SSH 金鑰）</h3>
 <p>工具會逐台自動登入，所以要先讓分析電腦不用輸入密碼就能登入每台主機。做法是用 SSH 金鑰：在分析電腦建立一組「私鑰＋公鑰」，把公鑰放到主機上，之後登入就不必打密碼。私鑰只留在分析電腦，不要交給任何人。</p>
+<div class="note">用選單的話，「2. 用 SSH 檢查多台主機」裡的「測試 SSH 連線」會逐台試登入，並告訴你那台有沒有免密碼 sudo。登不進去時，選單會問要不要幫你建立金鑰、把金鑰放到主機上（會問一次那台主機的密碼），就是下面這三步。</div>
 <div class="step"><b class="n">1</b><div><p>看看分析電腦有沒有金鑰：</p><pre>ls ~/.ssh/id_*.pub</pre><p>出現 <code>No such file</code> 代表沒有，用下面的指令建立一把，問題都直接按 Enter：</p><pre>ssh-keygen -t ed25519</pre><p>它會問三個問題：存放位置（直接按 Enter 用預設）、passphrase 與再確認一次（直接按 Enter 代表不另設保護密碼；單位規定要設的話照規定設，之後每次使用會要求輸入）。</p></div></div>
 <div class="step"><b class="n">2</b><div><p>把公鑰放到每台主機上，這一步會問一次那台主機的密碼：</p><pre>ssh-copy-id admin@10.0.0.5</pre></div></div>
 <div class="step"><b class="n">3</b><div><p>確認可以免密碼登入，看到 <code>OK</code> 就成功了：</p><pre>ssh admin@10.0.0.5 'echo OK'</pre><p>第一次連線會問要不要信任這台主機，確認 IP 沒錯後回答 <code>yes</code>。</p></div></div>
@@ -285,22 +289,25 @@ H02   ops@10.0.0.6     -p 2222</pre>
 
 <h2>4. 收集資料並產生報告</h2>
 <p>依你的情況選一種。三種做法只要都用 sudo 收集，產生的報告完全一樣。</p>
+<div class="note"><b>不想記指令的話</b>，在工具資料夾裡輸入 <code>./hc</code>（後面不加任何字），會出現選單：1 是情況一，2 是情況二，3 是情況三的分析步驟。每個問題直接按 Enter 就是括號裡的預設值，輸入 <code>0</code> 回上一層。做完會顯示報告的完整位置、問要不要用瀏覽器打開，最後一行告訴你同一件事的指令。</div>
 
 <h3>情況一：只想檢查分析電腦自己</h3>
 <p>要檢查的 Ubuntu 主機就是你正在用的這台。收集和分析都在這台完成，不需要 SSH，也不需要第 3 章的主機清單。</p>
 <p>打開終端機，先進到工具資料夾，再執行：</p>
 <pre>cd Ubuntu-Server-Audit
 ./hc local</pre>
-<p>執行時會詢問一次你這個帳號的 sudo 密碼（打字時畫面不會顯示，打完按 Enter）。跑完時畫面最後幾行會像這樣，照著用瀏覽器打開那個 html 檔：</p>
+<p>執行時會詢問一次你這個帳號的登入密碼，給 sudo 用（打字時畫面不會顯示，打完按 Enter）。這個帳號沒有 sudo 權限的話，按 Ctrl＋C 跳過，工具會自動改用一般權限繼續。跑完時畫面最後幾行會像這樣，照著用瀏覽器打開那個 html 檔：</p>
 <pre class="out">報告：reports/2026-11-21-224410/report-20261121-224410.html　← 用瀏覽器打開
 完整明細：oval-detail.json（自己留存即可，不必寄出）
 怎麼看報告：使用者手冊 docs/user-guide.pdf 第 5 章
 交給顧問：reports/2026-11-21-224410/findings-ai-20261121-224410.json（已去識別化…）</pre>
-<p>加上 <code>--no-sudo</code> 就不用 sudo，只是 SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」。</p>
+<p>一開始就不想用 sudo、不想被問密碼，改用：</p>
+<pre>./hc local --no-sudo</pre>
+<p>用一般權限時，SSH 設定、防火牆、空密碼帳號三項會列為「未能檢查」，其他項目照常檢查。需要完整結果，可以請有 sudo 權限的人用情況三收集。</p>
 <p>只有分析電腦本身是 Ubuntu 時才能用。macOS 沒有 Ubuntu 的套件清單，可以用來掃別台主機，但不能掃自己。</p>
 
 <h3>情況二：分析電腦能用 SSH 連到主機（多台主機時建議）</h3>
-<div class="step"><b class="n">1</b><div><p>在 <code>Ubuntu-Server-Audit</code> 資料夾裡執行：</p><pre>./hc scan hosts.txt</pre><p>預設用 sudo 收集；不想用 sudo 時加上 <code>--no-sudo</code>。</p></div></div>
+<div class="step"><b class="n">1</b><div><p>在 <code>Ubuntu-Server-Audit</code> 資料夾裡執行：</p><pre>./hc scan</pre><p>會讀工具資料夾裡的 <code>inventory.txt</code>。預設用 sudo 收集；不想用 sudo 時加上 <code>--no-sudo</code>。</p></div></div>
 <div class="step"><b class="n">2</b><div><p>等它跑完。每台主機通常 3 到 15 秒。畫面會像這樣（實測輸出）：</p>
 <pre class="out">開始收集 1 台主機（收集檔存放在 reports/2026-11-16-151406/collected，內含套件清單，請妥善保管）
   [1/1] H01：完成，3 秒
@@ -333,12 +340,12 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 <text class="zl" x="22" y="30">你的分析電腦（掃描時不必上網）</text>
 <rect class="hl" x="28" y="44" width="244" height="40" rx="8"/>
 <circle class="bd" cx="46" cy="64" r="10"/><text class="bn" x="46" y="68" text-anchor="middle">2</text>
-<text class="c" x="62" y="68">./hc scan hosts.txt</text>
+<text class="c" x="62" y="68">./hc scan</text>
 <rect class="bx" x="28" y="100" width="244" height="252" rx="8"/>
 <text class="c" x="40" y="120">Ubuntu-Server-Audit/</text>
 <rect class="wb" x="40" y="130" width="220" height="40" rx="6"/>
 <circle class="bd" cx="56" cy="150" r="10"/><text class="bn" x="56" y="154" text-anchor="middle">1</text>
-<text class="c" x="72" y="146">hosts.txt</text>
+<text class="c" x="72" y="146">inventory.txt</text>
 <text class="s" x="72" y="163">主機清單：代號 帳號@IP</text>
 <rect class="wb" x="40" y="178" width="220" height="40" rx="6"/>
 <text class="c" x="72" y="194">collect.sh</text>
@@ -388,8 +395,8 @@ A＝訂閱 Ubuntu Pro 可解決　B＝要重開機（Livepatch 可部分解決�
 <figcaption>圖 2　用 SSH 一次掃描多台主機</figcaption>
 </div>
 <ol class="legend">
-  <li>① 把要檢查的主機寫進 <code>hosts.txt</code>（3.1 節），並設好免密碼登入（3.2 節）。</li>
-  <li>② 在分析電腦上執行 <code>./hc scan hosts.txt</code>。</li>
+  <li>① 把要檢查的主機寫進 <code>inventory.txt</code>（3.1 節），並設好免密碼登入（3.2 節）。</li>
+  <li>② 在分析電腦上執行 <code>./hc scan</code>。</li>
   <li>③ 工具經 SSH 逐台登入，把 <code>collect.sh</code> 送進主機執行。不安裝套件、不改設定（主機上會留下哪些紀錄見 4.3 節）。</li>
   <li>④ 收集結果傳回分析電腦，主機上不會留下腳本或收集檔。</li>
   <li>⑤ 在分析電腦上和 <code>data/</code> 裡的官方資料比對，不必上網。</li>
@@ -616,11 +623,11 @@ ssh admin@10.0.0.5 'echo OK'</pre>
 ssh -p 2222 admin@10.0.0.5 'echo OK'</pre>
 <p>無法確認原因時不要刪，請先通報資安人員。</p>
 
-<p><b>Q：出現「找不到主機清單 hosts.txt」</b></p>
-<p>還沒建立主機清單，照 3.1 節做。</p>
+<p><b>Q：出現「找不到主機清單 inventory.txt」</b></p>
+<p>還沒建立主機清單，照 3.1 節做；最簡單是輸入 <code>./hc</code>，在選單 2 裡新增主機。</p>
 
 <p><b>Q：<code>./hc scan</code> 時出現「Permission denied (publickey…)」</b></p>
-<p>帳號或金鑰不對，照 3.2 節確認 <code>ssh 帳號@IP 'echo OK'</code> 能不用密碼登入。</p>
+<p>帳號或金鑰不對，照 3.2 節確認 <code>ssh 帳號@IP 'echo OK'</code> 能不用密碼登入；也可以在選單 2 的「測試 SSH 連線」讓工具幫你放金鑰。</p>
 
 <p><b>Q：執行 <code>./hc</code> 時出現「Permission denied」或「permission denied: ./hc」</b></p>
 <p>檔案少了「可以執行」的權限，常見於用壓縮檔下載、或從隨身碟複製過來的情況。在工具資料夾裡執行一次下面這行就好：</p>
@@ -634,10 +641,10 @@ ssh -p 2222 admin@10.0.0.5 'echo OK'</pre>
 <p>沒有安裝 git。照 2.1 節安裝，或改到 Releases 下載 <code>Ubuntu-Server-Audit-full.zip</code>（2.2 節）。</p>
 
 <p><b>Q：不確定指令怎麼用、或想知道工具版本</b></p>
-<p>執行 <code>./hc -h</code> 看說明，每個指令也都能加 <code>-h</code>，例如 <code>./hc scan -h</code>；執行 <code>./hc --version</code> 看版本。</p>
+<p>輸入 <code>./hc</code> 開選單，照畫面做；或執行 <code>./hc -h</code> 看說明，每個指令也都能加 <code>-h</code>，例如 <code>./hc scan -h</code>；執行 <code>./hc --version</code> 看版本。</p>
 
 <p><b>Q：出現「Could not resolve hostname」</b></p>
-<p>分析電腦查不到這個主機名稱，<code>hosts.txt</code> 改寫 IP。</p>
+<p>分析電腦查不到這個主機名稱，主機清單 <code>inventory.txt</code> 改寫 IP。</p>
 
 <p><b>Q：SSH 設定、防火牆顯示「未能檢查」</b></p>
 <p>那台主機的帳號不能免密碼 sudo，工具自動改用了一般權限，畫面上會有說明。可以請管理者用情況三的 <code>sudo bash collect.sh --tag 代號</code> 收集。</p>
@@ -660,13 +667,15 @@ ssh -p 2222 admin@10.0.0.5 'echo OK'</pre>
 <h2>8. 附錄：指令速查</h2>
 <div class="tw"><table>
 <tr><th>要做的事</th><th>指令</th></tr>
+<tr><td>開啟選單（不用記指令）</td><td><code>./hc</code></td></tr>
 <tr><td>下載工具（含官方資料）</td><td><code>git clone https://github.com/ikusupuroaj/Ubuntu-Server-Audit.git</code></td></tr>
 <tr><td>看官方資料日期</td><td><code>./hc update --list</code></td></tr>
 <tr><td>更新官方資料</td><td><code>./hc update</code> 或 <code>git pull</code></td></tr>
 <tr><td>核對資料沒被改過</td><td><code>./hc update --verify</code></td></tr>
 <tr><td>檢查這台電腦自己</td><td><code>./hc local</code></td></tr>
-<tr><td>建立主機清單</td><td><code>cp hosts.example.txt hosts.txt</code></td></tr>
-<tr><td>用 SSH 收集並分析</td><td><code>./hc scan hosts.txt</code></td></tr>
+<tr><td>不用 sudo、只用一般權限檢查這台電腦</td><td><code>./hc local --no-sudo</code></td></tr>
+<tr><td>建立主機清單</td><td>選單 2「新增主機」，或 <code>cp inventory.example.txt inventory.txt</code> 再編輯</td></tr>
+<tr><td>用 SSH 收集並分析</td><td><code>./hc scan</code></td></tr>
 <tr><td>主機管理者自己收集</td><td><code>sudo bash collect.sh --tag H01</code></td></tr>
 <tr><td>分析交回來的收集檔</td><td><code>./hc report hc-*.tar.gz</code></td></tr>
 <tr><td>交給顧問分析</td><td>用上傳網頁送出報告資料夾裡的 <code>findings-ai-日期時間.json</code>（第 6 章）</td></tr>
@@ -674,6 +683,7 @@ ssh -p 2222 admin@10.0.0.5 'echo OK'</pre>
 <tr><td>掃描前先檢查新的官方資料</td><td>原本的指令後面加 <code>--refresh-data</code></td></tr>
 <tr><td>看完整參數說明</td><td><code>./hc -h</code>、<code>./hc scan -h</code>、<code>./hc report -h</code></td></tr>
 <tr><td>看工具版本</td><td><code>./hc --version</code></td></tr>
+<tr><td>產生報告後不要問「要不要打開」</td><td>用文字編輯器把 <code>settings.ini</code> 的 <code>ask_open_report</code> 改成 <code>no</code></td></tr>
 </table></div>
 
 <p class="mut">授權：工具程式碼採用 Apache License 2.0。官方 OVAL 資料的著作權屬於 Canonical Ltd.，授權 CC BY-SA 4.0，本專案原樣轉存、未經修改。</p>

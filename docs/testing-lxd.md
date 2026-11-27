@@ -124,7 +124,7 @@ lxc exec t-2204 -- su - ubuntu -c 'sudo -n bash -s -- --tag T-2204 --stdout' < c
    lxc exec t-2004 -- su - ubuntu -c 'mkdir -p -m 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys' < ~/.ssh/id_ed25519.pub
    ```
 
-3. 查測試機 IP：`lxc list t-2004 -c n4`。`hosts.txt` 要寫 IP，測試主機查不到 LXD 測試機的名稱。
+3. 查測試機 IP：`lxc list t-2004 -c n4`。主機清單 `inventory.txt` 要寫 IP，測試主機查不到 LXD 測試機的名稱。
 4. 刪掉測試機再重建時，新測試機可能拿到同一個 IP，SSH 會出現「REMOTE HOST IDENTIFICATION HAS CHANGED」。確定是自己剛建的測試機後，執行 `ssh-keygen -R 測試機IP` 刪掉舊紀錄再連。
 
 ## 附錄：驗證「只修這一則」的指令（tests/lxd-fixcheck.sh）

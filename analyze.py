@@ -43,7 +43,7 @@ import unicodedata
 import xml.etree.ElementTree as ET
 from html import escape as html_escape
 
-TOOL_VERSION = "0.7.4"
+TOOL_VERSION = "0.8.0"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 

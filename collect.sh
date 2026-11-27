@@ -1,6 +1,6 @@
 #!/bin/bash
 # Ubuntu-Server-Audit｜收集腳本（collect.sh）
-# 版本：0.7.4（和 hc、analyze.py 用同一個號碼；2026-11-22 起用 sudo 執行時，收集檔自動交還原帳號）
+# 版本：0.8.0（和 hc、analyze.py 用同一個號碼；2026-11-22 起用 sudo 執行時，收集檔自動交還原帳號）
 #
 # 在受檢主機上執行，只讀取系統資訊，產出一個 tar.gz 交給分析電腦。
 # 弱點比對不在主機上做，主機上不需要安裝任何東西，也不需要連網。
@@ -106,7 +106,7 @@ read("/etc/ssh/sshd_config")
 for k,d in want.items(): print(k,got.get(k,d))'
 
 {
-  echo "collector_version=0.7.4"
+  echo "collector_version=0.8.0"
   echo "collected_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "tag=${TAG}"
   echo "uid=$(id -u)"

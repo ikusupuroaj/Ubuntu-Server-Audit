@@ -11,4 +11,6 @@ __pycache__/
 .DS_Store
 /reports/
 /test-results/
+# 主機清單（含帳號與 IP，留在自己的單位）
+inventory.txt
 hosts.txt
