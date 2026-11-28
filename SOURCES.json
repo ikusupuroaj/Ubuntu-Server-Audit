@@ -1,0 +1,61 @@
+{
+  "files": {
+    "oci.com.ubuntu.bionic.usn.oval.xml.bz2": {
+      "downloaded_at": "2026-11-28T04:10:30Z",
+      "generator_timestamp": "2026-11-27T00:49:13",
+      "last_modified": "Fri, 27 Nov 2026 00:49:28 GMT",
+      "sha256": "af079b0d7640bb789b79f382a3bcd5d8e1c73ebf3943c9409334ad8044ef1456",
+      "size": 1016749,
+      "url": "https://security-metadata.canonical.com/oval/oci.com.ubuntu.bionic.usn.oval.xml.bz2"
+    },
+    "oci.com.ubuntu.focal.usn.oval.xml.bz2": {
+      "downloaded_at": "2026-11-28T04:10:32Z",
+      "generator_timestamp": "2026-11-26T16:52:06",
+      "last_modified": "Thu, 26 Nov 2026 16:52:23 GMT",
+      "sha256": "e7319e686840aff96c9db8510f1424be4fe6ba88fe78299aaefa70b7ae2ff99a",
+      "size": 1347827,
+      "url": "https://security-metadata.canonical.com/oval/oci.com.ubuntu.focal.usn.oval.xml.bz2"
+    },
+    "oci.com.ubuntu.jammy.usn.oval.xml.bz2": {
+      "downloaded_at": "2026-11-28T04:10:34Z",
+      "generator_timestamp": "2026-11-26T16:51:19",
+      "last_modified": "Thu, 26 Nov 2026 16:51:38 GMT",
+      "sha256": "33a797caf3c06e100d2f34066724ed92c808fb9d026b3049c43dfac2f8a7e32c",
+      "size": 1890876,
+      "url": "https://security-metadata.canonical.com/oval/oci.com.ubuntu.jammy.usn.oval.xml.bz2"
+    },
+    "oci.com.ubuntu.noble.usn.oval.xml.bz2": {
+      "downloaded_at": "2026-11-28T04:10:36Z",
+      "generator_timestamp": "2026-11-26T16:50:17",
+      "last_modified": "Thu, 26 Nov 2026 16:50:30 GMT",
+      "sha256": "26e94c637e29033be99c0c330fa219e2e771ef7b730bc011aa2f4f7901e79493",
+      "size": 1752801,
+      "url": "https://security-metadata.canonical.com/oval/oci.com.ubuntu.noble.usn.oval.xml.bz2"
+    },
+    "oci.com.ubuntu.resolute.usn.oval.xml.bz2": {
+      "downloaded_at": "2026-11-28T04:12:37Z",
+      "generator_timestamp": "2026-11-26T16:49:31",
+      "last_modified": "Thu, 26 Nov 2026 16:49:35 GMT",
+      "sha256": "aa27112eae476319d8bdebc1671ae65f79e812ed44a8f6b9c73ea45449f355cd",
+      "size": 638209,
+      "url": "https://security-metadata.canonical.com/oval/oci.com.ubuntu.resolute.usn.oval.xml.bz2"
+    },
+    "oci.com.ubuntu.trusty.usn.oval.xml.bz2": {
+      "downloaded_at": "2026-11-28T04:04:26Z",
+      "generator_timestamp": "2026-11-26T16:53:38",
+      "last_modified": "Thu, 26 Nov 2026 16:53:46 GMT",
+      "sha256": "b31dc5550116d7921147269193272ce1b52ed731bca2ade50108784d110feb5e",
+      "size": 844956,
+      "url": "https://security-metadata.canonical.com/oval/oci.com.ubuntu.trusty.usn.oval.xml.bz2"
+    },
+    "oci.com.ubuntu.xenial.usn.oval.xml.bz2": {
+      "downloaded_at": "2026-11-28T04:06:28Z",
+      "generator_timestamp": "2026-11-26T16:53:22",
+      "last_modified": "Thu, 26 Nov 2026 16:53:37 GMT",
+      "sha256": "d98c3fc48d69aaf9f9640bfed981742000fbdaaf3446a88b6550908e87916e7c",
+      "size": 992286,
+      "url": "https://security-metadata.canonical.com/oval/oci.com.ubuntu.xenial.usn.oval.xml.bz2"
+    }
+  },
+  "source": "https://security-metadata.canonical.com/oval/"
+}
